@@ -3,7 +3,7 @@
 
 namespace codefab {
 
-Parser::Parser(std::vector<Token> tokens) : tokens(std::move(tokens)) {}
+Parser::Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)) {}
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> statements;
@@ -224,11 +224,11 @@ bool Parser::matchAny(std::initializer_list<TokenType> types) {
 
 bool Parser::check(TokenType type) const {
     if (isAtEnd()) return false;
-    return tokens[current].type == type;
+    return m_tokens[m_current].type == type;
 }
 
 Token& Parser::advance() {
-    if (!isAtEnd()) current++;
+    if (!isAtEnd()) m_current++;
     return previous();
 }
 
@@ -240,19 +240,19 @@ Token& Parser::consume(TokenType type, const std::string& message) {
 }
 
 bool Parser::isAtEnd() const {
-    return tokens[current].type == TokenType::EOF_TOKEN;
+    return m_tokens[m_current].type == TokenType::EOF_TOKEN;
 }
 
 Token& Parser::peek() {
-    return tokens[current];
+    return m_tokens[m_current];
 }
 
 const Token& Parser::peek() const {
-    return tokens[current];
+    return m_tokens[m_current];
 }
 
 Token& Parser::previous() {
-    return tokens[current - 1];
+    return m_tokens[m_current - 1];
 }
 
 } // namespace codefab

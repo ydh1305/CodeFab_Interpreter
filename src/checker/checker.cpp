@@ -27,17 +27,17 @@ void Checker::checkExpr(const Expr& expr) {
 }
 
 void Checker::beginScope() {
-    scopes.push_back({});
+    m_scopes.push_back({});
 }
 
 void Checker::endScope() {
-    scopes.pop_back();
+    m_scopes.pop_back();
 }
 
 // 현재 스코프에 변수를 선언만 함 (초기화 미완료 상태 = false)
 void Checker::declare(const std::string& name) {
-    if (scopes.empty()) return;
-    auto& scope = scopes.back();
+    if (m_scopes.empty()) return;
+    auto& scope = m_scopes.back();
     if (scope.count(name)) {
         throw CheckerError(
             "Already a variable with this name in this scope.");
@@ -47,16 +47,16 @@ void Checker::declare(const std::string& name) {
 
 // 현재 스코프의 변수를 초기화 완료 상태로 변경 (= true)
 void Checker::define(const std::string& name) {
-    if (scopes.empty()) return;
-    scopes.back()[name] = true;
+    if (m_scopes.empty()) return;
+    m_scopes.back()[name] = true;
 }
 
 // 가장 안쪽 스코프부터 바깥으로 탐색
 // 변수가 선언됐지만 초기화 미완료이면 자기 참조 에러
 void Checker::resolveVariable(const std::string& name) {
-    for (int i = static_cast<int>(scopes.size()) - 1; i >= 0; --i) {
-        auto it = scopes[i].find(name);
-        if (it != scopes[i].end()) {
+    for (int i = static_cast<int>(m_scopes.size()) - 1; i >= 0; --i) {
+        auto it = m_scopes[i].find(name);
+        if (it != m_scopes[i].end()) {
             if (!it->second) {
                 throw CheckerError(
                     "Can't read local variable in its own initializer.");

@@ -6,7 +6,7 @@
 namespace codefab {
 
 Executor::Executor()
-    : environment(std::make_shared<Environment>()) {}
+    : m_environment(std::make_shared<Environment>()) {}
 
 // ---- Public interface --------------------------------------------------------
 
@@ -28,17 +28,17 @@ void Executor::executeStmt(const Stmt& stmt) {
 
 void Executor::executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts,
                             std::shared_ptr<Environment> env) {
-    auto previous = environment;
-    environment = std::move(env);
+    auto previous = m_environment;
+    m_environment = std::move(env);
     try {
         for (const auto& stmt : stmts) {
             executeStmt(*stmt);
         }
     } catch (...) {
-        environment = previous;
+        m_environment = previous;
         throw;
     }
-    environment = previous;
+    m_environment = previous;
 }
 
 bool Executor::isTruthy(const FabValue& val) {
@@ -82,11 +82,11 @@ void Executor::visitVarDeclare(const VarDeclareStmt& stmt) {
     if (stmt.initializer) {
         val = evaluate(*stmt.initializer);
     }
-    environment->define(stmt.name.origin, std::move(val));
+    m_environment->define(stmt.name.origin, std::move(val));
 }
 
 void Executor::visitBlock(const BlockStmt& stmt) {
-    executeBlock(stmt.statements, std::make_shared<Environment>(environment));
+    executeBlock(stmt.statements, std::make_shared<Environment>(m_environment));
 }
 
 void Executor::visitIf(const IfStmt& stmt) {
@@ -98,9 +98,9 @@ void Executor::visitIf(const IfStmt& stmt) {
 }
 
 void Executor::visitFor(const ForStmt& stmt) {
-    auto forEnv = std::make_shared<Environment>(environment);
-    auto previous = environment;
-    environment = forEnv;
+    auto forEnv = std::make_shared<Environment>(m_environment);
+    auto previous = m_environment;
+    m_environment = forEnv;
     try {
         if (stmt.initializer) executeStmt(*stmt.initializer);
 
@@ -109,10 +109,10 @@ void Executor::visitFor(const ForStmt& stmt) {
             if (stmt.increment) evaluate(*stmt.increment);
         }
     } catch (...) {
-        environment = previous;
+        m_environment = previous;
         throw;
     }
-    environment = previous;
+    m_environment = previous;
 }
 
 // ---- ExprVisitor -------------------------------------------------------------
@@ -123,7 +123,7 @@ FabValue Executor::visitLiteral(const LiteralExpr& expr) {
 
 FabValue Executor::visitVariable(const VariableExpr& expr) {
     try {
-        return environment->get(expr.name.origin);
+        return m_environment->get(expr.name.origin);
     } catch (const RuntimeError&) {
         // 줄 번호 포함한 에러 메시지로 재throw
         throw RuntimeError(
@@ -135,7 +135,7 @@ FabValue Executor::visitVariable(const VariableExpr& expr) {
 FabValue Executor::visitAssign(const AssignExpr& expr) {
     FabValue val = evaluate(*expr.value);
     try {
-        environment->assign(expr.name.origin, val);
+        m_environment->assign(expr.name.origin, val);
     } catch (const RuntimeError&) {
         throw RuntimeError(
             "[line " + std::to_string(expr.name.line) +
