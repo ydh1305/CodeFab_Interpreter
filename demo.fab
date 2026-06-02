@@ -1,0 +1,74 @@
+// ========================================
+//   Code Fab  -  Fab Language Demo
+// ========================================
+
+// 1. 변수 선언 & 산술 연산
+print "=== 산술 연산 ===";
+var a = 10;
+var b = 3;
+print a + b;
+print a - b;
+print a * b;
+print a / b;
+print a % b;
+
+// 2. 문자열 연결 (문자열 + 문자열만 허용)
+print "=== 문자열 ===";
+var hello = "Hello, ";
+var world = "Fab World!";
+print hello + world;
+
+// 3. 비교 / 논리 연산
+print "=== 비교 / 논리 ===";
+print 10 > 5;
+print 10 == 10;
+print 3 != 7;
+print true && false;
+print true || false;
+print !false;
+
+// 4. if / else
+print "=== if / else ===";
+var score = 85;
+if (score >= 90) {
+    print "A";
+} else {
+    if (score >= 80) {
+        print "B";
+    } else {
+        print "C";
+    }
+}
+
+// 5. for 루프 (1~5 합산)
+print "=== for 루프 ===";
+var sum = 0;
+for (var i = 1; i <= 5; i = i + 1) {
+    sum = sum + i;
+}
+print sum;
+
+// 6. 스코프 (블록 변수 격리)
+print "=== 스코프 ===";
+var x = "outer";
+{
+    var x = "inner";
+    print x;
+}
+print x;
+
+// 7. 중첩 루프 (3x3 = 9회)
+print "=== 중첩 루프 ===";
+var count = 0;
+for (var i = 0; i < 3; i = i + 1) {
+    for (var j = 0; j < 3; j = j + 1) {
+        count = count + 1;
+    }
+}
+print count;
+
+// 8. 논리 단락 평가 (Short-circuit)
+print "=== 단락 평가 ===";
+var flag = false;
+print flag && true;
+print flag || true;

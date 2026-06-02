@@ -1,0 +1,28 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CodeFab", "CodeFab.vcxproj", "{B0CC688D-C63B-4C36-B76C-3EB0BA71B031}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CodeFabTest", "CodeFabTest.vcxproj", "{7AF99548-1373-41E0-99AB-1030B583ED6A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B0CC688D-C63B-4C36-B76C-3EB0BA71B031}.Debug|x64.ActiveCfg = Debug|x64
+		{B0CC688D-C63B-4C36-B76C-3EB0BA71B031}.Debug|x64.Build.0 = Debug|x64
+		{B0CC688D-C63B-4C36-B76C-3EB0BA71B031}.Release|x64.ActiveCfg = Release|x64
+		{B0CC688D-C63B-4C36-B76C-3EB0BA71B031}.Release|x64.Build.0 = Release|x64
+		{7AF99548-1373-41E0-99AB-1030B583ED6A}.Debug|x64.ActiveCfg = Debug|x64
+		{7AF99548-1373-41E0-99AB-1030B583ED6A}.Debug|x64.Build.0 = Debug|x64
+		{7AF99548-1373-41E0-99AB-1030B583ED6A}.Release|x64.ActiveCfg = Release|x64
+		{7AF99548-1373-41E0-99AB-1030B583ED6A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
