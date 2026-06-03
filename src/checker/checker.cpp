@@ -42,6 +42,7 @@ void Checker::visitExpression(const ExpressionStmt& stmt) { checkExpr(*stmt.expr
 void Checker::visitPrint(const PrintStmt& stmt)           { checkExpr(*stmt.expression); }
 
 void Checker::visitVarDeclare(const VarDeclareStmt& stmt) {
+    // declare(선언만) → checkExpr(초기화식 자기참조 검사) → define(사용 가능 상태)
     declare(stmt.name.origin);
     if (stmt.initializer) checkExpr(*stmt.initializer);
     define(stmt.name.origin);
