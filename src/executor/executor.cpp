@@ -27,9 +27,9 @@ void Executor::executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts,
     environment = previous;
 }
 
-bool Executor::isTruthy(const FabValue& val)                             { return codefab::isTruthy(val); }
-bool Executor::isEqualVal(const FabValue& a, const FabValue& b)          { return a == b; }
-std::string Executor::stringify(const FabValue& val)                     { return codefab::stringify(val); }
+bool Executor::isTruthy(const FabValue& val)                    { return codefab::isTruthy(val); }
+bool Executor::isEqualVal(const FabValue& a, const FabValue& b) { return a == b; }
+std::string Executor::stringify(const FabValue& val)            { return codefab::stringify(val); }
 
 void Executor::checkNumber(const FabValue& val, const std::string&) {
     if (!std::holds_alternative<double>(val))
@@ -40,13 +40,42 @@ void Executor::checkNumbers(const FabValue& l, const FabValue& r, const std::str
         throw RuntimeError("Operands must be numbers.");
 }
 
-// ---- 구문 실행 (다음 커밋에서 구현) -----------------------------------------
-void Executor::visitExpression(const ExpressionStmt&) {}
-void Executor::visitPrint(const PrintStmt&)           {}
-void Executor::visitVarDeclare(const VarDeclareStmt&) {}
-void Executor::visitBlock(const BlockStmt&)           {}
-void Executor::visitIf(const IfStmt&)                 {}
-void Executor::visitFor(const ForStmt&)               {}
+// ---- 구문 실행 ---------------------------------------------------------------
+
+void Executor::visitExpression(const ExpressionStmt& stmt) { evaluate(*stmt.expression); }
+
+void Executor::visitPrint(const PrintStmt& stmt) {
+    std::cout << stringify(evaluate(*stmt.expression)) << "\n";
+}
+
+void Executor::visitVarDeclare(const VarDeclareStmt& stmt) {
+    FabValue val = nullptr;
+    if (stmt.initializer) val = evaluate(*stmt.initializer);
+    environment->define(stmt.name.origin, std::move(val));
+}
+
+void Executor::visitBlock(const BlockStmt& stmt) {
+    executeBlock(stmt.statements, std::make_shared<Environment>(environment));
+}
+
+void Executor::visitIf(const IfStmt& stmt) {
+    if (isTruthy(evaluate(*stmt.condition))) executeStmt(*stmt.thenBranch);
+    else if (stmt.elseBranch)               executeStmt(*stmt.elseBranch);
+}
+
+void Executor::visitFor(const ForStmt& stmt) {
+    auto forEnv = std::make_shared<Environment>(environment);
+    auto previous = environment;
+    environment = forEnv;
+    try {
+        if (stmt.initializer) executeStmt(*stmt.initializer);
+        while (!stmt.condition || isTruthy(evaluate(*stmt.condition))) {
+            executeStmt(*stmt.body);
+            if (stmt.increment) evaluate(*stmt.increment);
+        }
+    } catch (...) { environment = previous; throw; }
+    environment = previous;
+}
 
 // ---- 표현식 평가 -------------------------------------------------------------
 
