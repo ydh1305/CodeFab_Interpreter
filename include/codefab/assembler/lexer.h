@@ -14,11 +14,11 @@ public:
     std::vector<Token> tokenize();
 
 private:
-    std::string source;
-    std::vector<Token> tokens;
-    int start   = 0;
-    int current = 0;
-    int line    = 1;
+    std::string m_source;
+    std::vector<Token> m_tokens;
+    int m_start   = 0;
+    int m_current = 0;
+    int m_line    = 1; // 현재 줄 번호 (1-based)
 
     static const std::unordered_map<std::string, TokenType> KEYWORDS;
 
