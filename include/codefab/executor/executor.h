@@ -15,7 +15,7 @@ public:
     void execute(const std::vector<std::unique_ptr<Stmt>>& statements);
 
 private:
-    std::shared_ptr<Environment> environment;
+    std::shared_ptr<Environment> m_environment;
 
     FabValue evaluate(const Expr& expr);
     void executeStmt(const Stmt& stmt);
