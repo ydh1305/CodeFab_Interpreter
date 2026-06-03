@@ -15,8 +15,8 @@ public:
     std::vector<std::unique_ptr<Stmt>> parse();
 
 private:
-    std::vector<Token> tokens;
-    int current = 0;
+    std::vector<Token> m_tokens;
+    int m_current = 0;
 
     // Statement 파싱
     std::unique_ptr<Stmt> statement();

@@ -3,7 +3,7 @@
 
 namespace codefab {
 
-Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
+Parser::Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)) {}
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> statements;
@@ -52,7 +52,6 @@ std::unique_ptr<Stmt> Parser::forStatement() {
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
     std::unique_ptr<Stmt> initializer = nullptr;
     if (matchAny({TokenType::SEMICOLON})) {
-        // initializer omitted
     } else if (matchAny({TokenType::VAR})) {
         initializer = varDeclaration();
     } else {
@@ -198,17 +197,17 @@ bool Parser::matchAny(std::initializer_list<TokenType> types) {
 }
 bool Parser::check(TokenType type) const {
     if (isAtEnd()) return false;
-    return tokens[current].type == type;
+    return m_tokens[m_current].type == type;
 }
-Token& Parser::advance() { if (!isAtEnd()) current++; return previous(); }
+Token& Parser::advance() { if (!isAtEnd()) m_current++; return previous(); }
 Token& Parser::consume(TokenType type, const std::string& message) {
     if (check(type)) return advance();
     if (isAtEnd()) throw IncompleteInputError(message);
     throw AssemblerError(message);
 }
-bool Parser::isAtEnd() const       { return tokens[current].type == TokenType::EOF_TOKEN; }
-Token& Parser::peek()              { return tokens[current]; }
-const Token& Parser::peek() const  { return tokens[current]; }
-Token& Parser::previous()          { return tokens[current - 1]; }
+bool Parser::isAtEnd() const       { return m_tokens[m_current].type == TokenType::EOF_TOKEN; }
+Token& Parser::peek()              { return m_tokens[m_current]; }
+const Token& Parser::peek() const  { return m_tokens[m_current]; }
+Token& Parser::previous()          { return m_tokens[m_current - 1]; }
 
 } // namespace codefab
