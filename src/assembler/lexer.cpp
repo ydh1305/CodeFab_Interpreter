@@ -3,8 +3,16 @@
 
 namespace codefab {
 
-// 키워드 테이블: 다음 커밋에서 채울 예정
-const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {};
+const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {
+    {"var",   TokenType::VAR},
+    {"print", TokenType::PRINT},
+    {"if",    TokenType::IF},
+    {"else",  TokenType::ELSE},
+    {"for",   TokenType::FOR},
+    {"true",  TokenType::TRUE_TOKEN},
+    {"false", TokenType::FALSE_TOKEN},
+    {"null",  TokenType::NULL_TOKEN},
+};
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {
     // UTF-8 BOM (EF BB BF) 자동 제거
@@ -90,8 +98,10 @@ void Lexer::scanNumber() {
 
 void Lexer::scanIdentifier() {
     while (isAlphaNumeric(peek())) advance();
-    // 키워드 구분 없이 모두 IDENTIFIER 처리 (다음 커밋에서 키워드 인식 추가)
-    addToken(TokenType::IDENTIFIER);
+    std::string text = source.substr(start, current - start);
+    auto it = KEYWORDS.find(text);
+    TokenType type = (it != KEYWORDS.end()) ? it->second : TokenType::IDENTIFIER;
+    addToken(type);
 }
 
 void Lexer::addToken(TokenType type) {
