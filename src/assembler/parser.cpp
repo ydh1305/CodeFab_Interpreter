@@ -84,6 +84,7 @@ std::unique_ptr<Stmt> Parser::expressionStatement() {
 }
 
 // ---- Expression 파싱 (우선순위 낮은 순) -------------------------------------
+// assignment < logicalOr < logicalAnd < equality < comparison < term < factor < unary < primary
 
 std::unique_ptr<Expr> Parser::expression() { return assignment(); }
 
