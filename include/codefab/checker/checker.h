@@ -17,7 +17,7 @@ public:
 
 private:
     // 스코프 스택: 각 맵의 값이 false이면 선언됐지만 아직 초기화 안 됨
-    std::vector<std::unordered_map<std::string, bool>> scopes;
+    std::vector<std::unordered_map<std::string, bool>> m_scopes;
 
     void checkStmt(const Stmt& stmt);
     void checkExpr(const Expr& expr);
