@@ -93,3 +93,17 @@ TEST(ParserTest, BlockStatement) {
     auto* b = dynamic_cast<BlockStmt*>(s[0].get());
     ASSERT_NE(b, nullptr); EXPECT_EQ(b->statements.size(), 2u);
 }
+
+// ── 파싱 에러 케이스 ─────────────────────────────────────────────
+TEST(ParserTest, MissingSemicolon) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::VAR,"var"},{TokenType::IDENTIFIER,"x"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"10"}})), AssemblerError);
+}
+TEST(ParserTest, MissingClosingParen) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::LEFT_PAREN,"("},{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"}})), AssemblerError);
+}
+TEST(ParserTest, MissingClosingBrace) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::LEFT_BRACE,"{"},{TokenType::PRINT,"print"},{TokenType::NUMBER,"1"},{TokenType::SEMICOLON,";"}})), AssemblerError);
+}
+TEST(ParserTest, InvalidAssignmentTarget) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"3"},{TokenType::SEMICOLON,";"}})), AssemblerError);
+}
