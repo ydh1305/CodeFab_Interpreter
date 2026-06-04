@@ -111,3 +111,16 @@ TEST(CheckerTest, DuplicateVarInBlockConfirmed) {
     s.push_back(mock::makeBlock(std::move(inner)));
     EXPECT_THROW(checkWith(std::move(s)), CheckerError);
 }
+
+// ── 자기참조 검사 ─────────────────────────────────────────────────
+TEST(CheckerTest, SelfReferenceInInit) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeVarDecl("a", mock::makeVar("a")));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}
+TEST(CheckerTest, SelfReferenceInInitExpression) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto expr = std::make_unique<BinaryExpr>(mock::makeVar("a"), Token(TokenType::PLUS,"+"), mock::makeLit(1.0));
+    s.push_back(mock::makeVarDecl("a", std::move(expr)));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}
