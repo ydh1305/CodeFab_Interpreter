@@ -60,3 +60,19 @@ TEST(LexerTest, IdentifierWithUnderscore) {
     ASSERT_EQ(t.size(), 1u);
     EXPECT_EQ(t[0].type, TokenType::IDENTIFIER);
 }
+
+// ── 산술·비교 연산자 ──────────────────────────────────────────────
+TEST(LexerTest, ArithmeticOperators) {
+    auto t = lex("+ - * / %");
+    ASSERT_EQ(t.size(), 5u);
+    EXPECT_EQ(t[0].type, TokenType::PLUS);  EXPECT_EQ(t[1].type, TokenType::MINUS);
+    EXPECT_EQ(t[2].type, TokenType::STAR);  EXPECT_EQ(t[3].type, TokenType::SLASH);
+    EXPECT_EQ(t[4].type, TokenType::PERCENT);
+}
+TEST(LexerTest, ComparisonOperators) {
+    auto t = lex("> >= < <= == !=");
+    ASSERT_EQ(t.size(), 6u);
+    EXPECT_EQ(t[0].type, TokenType::GREATER);       EXPECT_EQ(t[1].type, TokenType::GREATER_EQUAL);
+    EXPECT_EQ(t[2].type, TokenType::LESS);          EXPECT_EQ(t[3].type, TokenType::LESS_EQUAL);
+    EXPECT_EQ(t[4].type, TokenType::EQUAL_EQUAL);   EXPECT_EQ(t[5].type, TokenType::BANG_EQUAL);
+}

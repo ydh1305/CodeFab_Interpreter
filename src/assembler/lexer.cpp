@@ -27,6 +27,18 @@ std::vector<Token> Lexer::tokenize() {
 void Lexer::scanToken() {
     char c = advance();
     switch (c) {
+        case '+': addToken(TokenType::PLUS);    break;
+        case '-': addToken(TokenType::MINUS);   break;
+        case '*': addToken(TokenType::STAR);    break;
+        case '%': addToken(TokenType::PERCENT); break;
+        case '/':
+            if (match('/')) { while (peek() != '\n' && !isAtEnd()) advance(); }
+            else addToken(TokenType::SLASH);
+            break;
+        case '!': addToken(match('=') ? TokenType::BANG_EQUAL  : TokenType::BANG);      break;
+        case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL);     break;
+        case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
+        case '<': addToken(match('=') ? TokenType::LESS_EQUAL  : TokenType::LESS);      break;
         case ' ': case '\r': case '\t': break;
         case '\n': line++; break;
         case '"': scanString(); break;
