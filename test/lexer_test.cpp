@@ -93,3 +93,19 @@ TEST(LexerTest, Delimiters) {
     EXPECT_EQ(t[2].type, TokenType::RIGHT_BRACE); EXPECT_EQ(t[3].type, TokenType::LEFT_PAREN);
     EXPECT_EQ(t[4].type, TokenType::RIGHT_PAREN);
 }
+
+// ── 공백·주석·다중줄 ─────────────────────────────────────────────
+TEST(LexerTest, WhitespaceIgnored) {
+    auto t = lex("  42  ");
+    ASSERT_EQ(t.size(), 1u); EXPECT_EQ(t[0].type, TokenType::NUMBER);
+}
+TEST(LexerTest, CommentIgnored) {
+    auto t = lex("42 // this is a comment\n99");
+    ASSERT_EQ(t.size(), 2u);
+    EXPECT_EQ(t[0].origin, "42"); EXPECT_EQ(t[1].origin, "99");
+}
+TEST(LexerTest, MultilineCode) {
+    auto t = lex("var\nx\n=\n10\n;");
+    ASSERT_EQ(t.size(), 5u);
+    EXPECT_EQ(t[0].type, TokenType::VAR); EXPECT_EQ(t[1].type, TokenType::IDENTIFIER);
+}
