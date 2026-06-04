@@ -19,7 +19,10 @@ void Executor::checkNumber(const FabValue& v, const std::string&) { if(!std::hol
 void Executor::checkNumbers(const FabValue& l, const FabValue& r, const std::string&) { if(!std::holds_alternative<double>(l)||!std::holds_alternative<double>(r)) throw RuntimeError("Operands must be numbers."); }
 // 구문 실행 — 다음 커밋에서 구현
 void Executor::visitExpression(const ExpressionStmt&) {}
-void Executor::visitPrint(const PrintStmt& s) { std::cout << stringify(evaluate(*s.expression)) << "\n"; }
+void Executor::visitPrint(const PrintStmt& s) {
+    const auto value = evaluate(*s.expression);
+    std::cout << stringify(value) << "\n";
+}
 void Executor::visitVarDeclare(const VarDeclareStmt& s) { FabValue v=nullptr; if(s.initializer) v=evaluate(*s.initializer); environment->define(s.name.origin,std::move(v)); }
 void Executor::visitBlock(const BlockStmt&)  {}
 void Executor::visitIf(const IfStmt&)        {}
