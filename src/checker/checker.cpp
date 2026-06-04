@@ -31,10 +31,12 @@ void Checker::resolveVariable(const std::string& name) {
     for (int i = (int)scopes.size() - 1; i >= 0; --i) {
         auto it = scopes[i].find(name);
         if (it != scopes[i].end()) {
-            // 자기참조 검사는 다음 커밋에서 추가
+            if (!it->second) // 선언됐으나 초기화 미완료 → 자기 참조
+                throw CheckerError("Can't read local variable in its own initializer.");
             return;
         }
     }
+    // 스코프에서 미발견: 런타임에서 처리
 }
 
 void Checker::visitExpression(const ExpressionStmt& s) { checkExpr(*s.expression); }
