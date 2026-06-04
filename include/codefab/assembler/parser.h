@@ -8,14 +8,15 @@
 
 namespace codefab {
 
+// Assembler Unit - 2단계: Token 목록 → AST (Statement 트리)
 class Parser {
 public:
     explicit Parser(std::vector<Token> tokens);
     std::vector<std::unique_ptr<Stmt>> parse();
 
 private:
-    std::vector<Token> tokens;
-    int current = 0;
+    std::vector<Token> m_tokens;
+    int m_current = 0;
 
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<Stmt> varDeclaration();

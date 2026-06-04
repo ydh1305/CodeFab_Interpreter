@@ -2,15 +2,13 @@
 
 namespace codefab {
 
-Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
+Parser::Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)) {}
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> statements;
     while (!isAtEnd()) statements.push_back(statement());
     return statements;
 }
-
-// ---- Statement 파싱 ----------------------------------------------------------
 
 std::unique_ptr<Stmt> Parser::statement() {
     if (matchAny({TokenType::VAR}))        return varDeclaration();
@@ -74,9 +72,7 @@ std::unique_ptr<Stmt> Parser::expressionStatement() {
     return std::make_unique<ExpressionStmt>(std::move(expr));
 }
 
-// ---- Expression 파싱 (우선순위 낮은 순) -------------------------------------
 // assignment < logicalOr < logicalAnd < equality < comparison < term < factor < unary < primary
-
 std::unique_ptr<Expr> Parser::expression() { return assignment(); }
 
 std::unique_ptr<Expr> Parser::assignment() {
@@ -168,16 +164,16 @@ bool Parser::matchAny(std::initializer_list<TokenType> types) {
     for (auto t : types) { if (check(t)) { advance(); return true; } }
     return false;
 }
-bool Parser::check(TokenType t) const { return !isAtEnd() && tokens[current].type == t; }
-Token& Parser::advance() { if (!isAtEnd()) current++; return previous(); }
+bool Parser::check(TokenType t) const { return !isAtEnd() && m_tokens[m_current].type == t; }
+Token& Parser::advance() { if (!isAtEnd()) m_current++; return previous(); }
 Token& Parser::consume(TokenType t, const std::string& msg) {
     if (check(t)) return advance();
     if (isAtEnd()) throw IncompleteInputError(msg);
     throw AssemblerError(msg);
 }
-bool Parser::isAtEnd() const       { return tokens[current].type == TokenType::EOF_TOKEN; }
-Token& Parser::peek()              { return tokens[current]; }
-const Token& Parser::peek() const  { return tokens[current]; }
-Token& Parser::previous()          { return tokens[current - 1]; }
+bool Parser::isAtEnd() const       { return m_tokens[m_current].type == TokenType::EOF_TOKEN; }
+Token& Parser::peek()              { return m_tokens[m_current]; }
+const Token& Parser::peek() const  { return m_tokens[m_current]; }
+Token& Parser::previous()          { return m_tokens[m_current - 1]; }
 
 } // namespace codefab
