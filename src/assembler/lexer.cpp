@@ -1,4 +1,5 @@
 #include "codefab/assembler/lexer.h"
+// [refactoring] 코드 정리 및 가독성 개선
 
 namespace codefab {
 
@@ -40,13 +41,11 @@ void Lexer::scanToken() {
         case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL);     break;
         case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
         case '<': addToken(match('=') ? TokenType::LESS_EQUAL  : TokenType::LESS);      break;
-        case '&':
-            if (match('&')) addToken(TokenType::AND);
-            else throw AssemblerError(std::string("예상치 못한 문자 '&' (위치: ") + std::to_string(current) + ")");
-            break;
-        case '|':
-            if (match('|')) addToken(TokenType::OR);
-            else throw AssemblerError(std::string("예상치 못한 문자 '|' (위치: ") + std::to_string(current) + ")");
+        case '&': // Fab은 '&&'만 지원; 단독 '&'는 오류
+            if (!match('&')) throw AssemblerError("'&&' 연산자를 사용하세요 (위치: " + std::to_string(current) + ")");
+            addToken(TokenType::AND); break;
+        case '|': // Fab은 '||'만 지원; 단독 '|'는 오류
+            if (!match('|')) throw AssemblerError("'||' 연산자를 사용하세요 (위치: " + std::to_string(current) + ")");
             break;
         case ';': addToken(TokenType::SEMICOLON);   break;
         case '{': addToken(TokenType::LEFT_BRACE);  break;
