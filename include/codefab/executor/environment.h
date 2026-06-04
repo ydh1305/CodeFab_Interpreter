@@ -15,8 +15,8 @@ public:
     void assign(const std::string& name, FabValue value);
 
 private:
-    std::unordered_map<std::string, FabValue> values;
-    std::shared_ptr<Environment> parent;
+    std::unordered_map<std::string, FabValue> m_values;
+    std::shared_ptr<Environment> m_parent;
 };
 
 } // namespace codefab

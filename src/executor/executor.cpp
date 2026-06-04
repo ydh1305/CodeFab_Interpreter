@@ -5,7 +5,7 @@
 
 namespace codefab {
 
-Executor::Executor() : environment(std::make_shared<Environment>()) {}
+Executor::Executor() : m_environment(std::make_shared<Environment>()) {}
 
 void Executor::execute(const std::vector<std::unique_ptr<Stmt>>& stmts) {
     for (const auto& s : stmts) executeStmt(*s);
@@ -16,11 +16,11 @@ void Executor::executeStmt(const Stmt& stmt)  { stmt.accept(*this); }
 
 void Executor::executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts,
                             std::shared_ptr<Environment> env) {
-    auto prev = environment;
-    environment = std::move(env);
+    auto prev = m_environment;
+    m_environment = std::move(env);
     try { for (const auto& s : stmts) executeStmt(*s); }
-    catch (...) { environment = prev; throw; }
-    environment = prev;
+    catch (...) { m_environment = prev; throw; }
+    m_environment = prev;
 }
 
 bool Executor::isTruthy(const FabValue& v)                    { return codefab::isTruthy(v); }
@@ -46,11 +46,11 @@ void Executor::visitPrint(const PrintStmt& s) {
 void Executor::visitVarDeclare(const VarDeclareStmt& s) {
     FabValue val = nullptr;
     if (s.initializer) val = evaluate(*s.initializer);
-    environment->define(s.name.origin, std::move(val));
+    m_environment->define(s.name.origin, std::move(val));
 }
 
 void Executor::visitBlock(const BlockStmt& s) {
-    executeBlock(s.statements, std::make_shared<Environment>(environment));
+    executeBlock(s.statements, std::make_shared<Environment>(m_environment));
 }
 
 void Executor::visitIf(const IfStmt& s) {
@@ -59,17 +59,17 @@ void Executor::visitIf(const IfStmt& s) {
 }
 
 void Executor::visitFor(const ForStmt& s) {
-    auto forEnv = std::make_shared<Environment>(environment);
-    auto prev = environment;
-    environment = forEnv;
+    auto forEnv = std::make_shared<Environment>(m_environment);
+    auto prev = m_environment;
+    m_environment = forEnv;
     try {
         if (s.initializer) executeStmt(*s.initializer);
         while (!s.condition || isTruthy(evaluate(*s.condition))) {
             executeStmt(*s.body);
             if (s.increment) evaluate(*s.increment);
         }
-    } catch (...) { environment = prev; throw; }
-    environment = prev;
+    } catch (...) { m_environment = prev; throw; }
+    m_environment = prev;
 }
 
 // ---- 표현식 평가 -------------------------------------------------------------
@@ -77,7 +77,7 @@ void Executor::visitFor(const ForStmt& s) {
 FabValue Executor::visitLiteral(const LiteralExpr& e) { return e.value; }
 
 FabValue Executor::visitVariable(const VariableExpr& e) {
-    try { return environment->get(e.name.origin); }
+    try { return m_environment->get(e.name.origin); }
     catch (const RuntimeError&) {
         throw RuntimeError("[line " + std::to_string(e.name.line) +
                            "] Undefined variable '" + e.name.origin + "'.");
@@ -86,7 +86,7 @@ FabValue Executor::visitVariable(const VariableExpr& e) {
 
 FabValue Executor::visitAssign(const AssignExpr& e) {
     FabValue val = evaluate(*e.value);
-    try { environment->assign(e.name.origin, val); }
+    try { m_environment->assign(e.name.origin, val); }
     catch (const RuntimeError&) {
         throw RuntimeError("[line " + std::to_string(e.name.line) +
                            "] Undefined variable '" + e.name.origin + "'.");
