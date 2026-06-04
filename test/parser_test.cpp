@@ -71,3 +71,25 @@ TEST(ParserTest, AssignmentExpression) {
     auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
     ASSERT_NE(dynamic_cast<AssignExpr*>(e->expression.get()), nullptr);
 }
+
+// ── if·for·블록 구문 ─────────────────────────────────────────────
+TEST(ParserTest, IfStatementWithoutElse) {
+    auto s = parseWith(mock::makeTokens({{TokenType::IF,"if"},{TokenType::LEFT_PAREN,"("},{TokenType::TRUE_TOKEN,"true"},{TokenType::RIGHT_PAREN,")"},{TokenType::PRINT,"print"},{TokenType::NUMBER,"1"},{TokenType::SEMICOLON,";"}}));
+    auto* st = dynamic_cast<IfStmt*>(s[0].get());
+    ASSERT_NE(st, nullptr); EXPECT_EQ(st->elseBranch, nullptr);
+}
+TEST(ParserTest, IfStatementWithElse) {
+    auto s = parseWith(mock::makeTokens({{TokenType::IF,"if"},{TokenType::LEFT_PAREN,"("},{TokenType::TRUE_TOKEN,"true"},{TokenType::RIGHT_PAREN,")"},{TokenType::PRINT,"print"},{TokenType::NUMBER,"1"},{TokenType::SEMICOLON,";"},{TokenType::ELSE,"else"},{TokenType::PRINT,"print"},{TokenType::NUMBER,"2"},{TokenType::SEMICOLON,";"}}));
+    auto* st = dynamic_cast<IfStmt*>(s[0].get());
+    ASSERT_NE(st, nullptr); EXPECT_NE(st->elseBranch, nullptr);
+}
+TEST(ParserTest, ForStatement) {
+    auto s = parseWith(mock::makeTokens({{TokenType::FOR,"for"},{TokenType::LEFT_PAREN,"("},{TokenType::VAR,"var"},{TokenType::IDENTIFIER,"i"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"0"},{TokenType::SEMICOLON,";"},{TokenType::IDENTIFIER,"i"},{TokenType::LESS,"<"},{TokenType::NUMBER,"10"},{TokenType::SEMICOLON,";"},{TokenType::IDENTIFIER,"i"},{TokenType::EQUAL,"="},{TokenType::IDENTIFIER,"i"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"1"},{TokenType::RIGHT_PAREN,")"},{TokenType::LEFT_BRACE,"{"},{TokenType::PRINT,"print"},{TokenType::IDENTIFIER,"i"},{TokenType::SEMICOLON,";"},{TokenType::RIGHT_BRACE,"}"}}));
+    auto* st = dynamic_cast<ForStmt*>(s[0].get());
+    ASSERT_NE(st, nullptr); EXPECT_NE(st->initializer, nullptr); EXPECT_NE(st->condition, nullptr);
+}
+TEST(ParserTest, BlockStatement) {
+    auto s = parseWith(mock::makeTokens({{TokenType::LEFT_BRACE,"{"},{TokenType::VAR,"var"},{TokenType::IDENTIFIER,"a"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"1"},{TokenType::SEMICOLON,";"},{TokenType::PRINT,"print"},{TokenType::IDENTIFIER,"a"},{TokenType::SEMICOLON,";"},{TokenType::RIGHT_BRACE,"}"}}));
+    auto* b = dynamic_cast<BlockStmt*>(s[0].get());
+    ASSERT_NE(b, nullptr); EXPECT_EQ(b->statements.size(), 2u);
+}

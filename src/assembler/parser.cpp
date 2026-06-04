@@ -1,6 +1,4 @@
-// [refactoring] 코드 정리 완료
 #include "codefab/assembler/parser.h"
-// [refactoring] 코드 정리 및 가독성 개선
 namespace codefab {
 Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
@@ -61,22 +59,8 @@ std::unique_ptr<Expr> Parser::logicalAnd() {
     }
     return e;
 }
-std::unique_ptr<Expr> Parser::equality() {
-    auto e = comparison();
-    while (matchAny({TokenType::EQUAL_EQUAL, TokenType::BANG_EQUAL})) {
-        Token op = previous();
-        e = std::make_unique<BinaryExpr>(std::move(e), op, comparison());
-    }
-    return e;
-}
-std::unique_ptr<Expr> Parser::comparison() {
-    auto e = term();
-    while (matchAny({TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL})) {
-        Token op = previous();
-        e = std::make_unique<BinaryExpr>(std::move(e), op, term());
-    }
-    return e;
-}
+std::unique_ptr<Expr> Parser::equality()    { auto e=comparison(); while(matchAny({TokenType::EQUAL_EQUAL,TokenType::BANG_EQUAL})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,comparison());}return e; }
+std::unique_ptr<Expr> Parser::comparison()  { auto e=term();       while(matchAny({TokenType::GREATER,TokenType::GREATER_EQUAL,TokenType::LESS,TokenType::LESS_EQUAL})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,term());}return e; }
 std::unique_ptr<Expr> Parser::term()        { auto e=factor();     while(matchAny({TokenType::PLUS,TokenType::MINUS})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,factor());}return e; }
 std::unique_ptr<Expr> Parser::factor()      { auto e=unary();      while(matchAny({TokenType::STAR,TokenType::SLASH,TokenType::PERCENT})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,unary());}return e; }
 std::unique_ptr<Expr> Parser::unary()       { if(matchAny({TokenType::BANG,TokenType::MINUS})){Token op=previous();return std::make_unique<UnaryExpr>(op,unary());}return primary(); }
