@@ -3,10 +3,10 @@
 namespace codefab {
 
 const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {
-    {"var",   TokenType::VAR},   {"print", TokenType::PRINT},
-    {"if",    TokenType::IF},    {"else",  TokenType::ELSE},
-    {"for",   TokenType::FOR},   {"true",  TokenType::TRUE_TOKEN},
-    {"false", TokenType::FALSE_TOKEN}, {"null", TokenType::NULL_TOKEN},
+    {"else",  TokenType::ELSE},  {"false", TokenType::FALSE_TOKEN},
+    {"for",   TokenType::FOR},   {"if",    TokenType::IF},
+    {"null",  TokenType::NULL_TOKEN}, {"print", TokenType::PRINT},
+    {"true",  TokenType::TRUE_TOKEN}, {"var",   TokenType::VAR},
 };
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {
