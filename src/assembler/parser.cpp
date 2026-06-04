@@ -78,7 +78,11 @@ std::unique_ptr<Expr> Parser::primary() {
 bool Parser::matchAny(std::initializer_list<TokenType> ts) { for(auto t:ts){if(check(t)){advance();return true;}}return false; }
 bool Parser::check(TokenType t) const { return !isAtEnd() && tokens[current].type == t; }
 Token& Parser::advance()  { if(!isAtEnd()) current++; return previous(); }
-Token& Parser::consume(TokenType t, const std::string& msg) { if(check(t)) return advance(); if(isAtEnd()) throw IncompleteInputError(msg); throw AssemblerError(msg); }
+Token& Parser::consume(TokenType t, const std::string& msg) {
+    if (check(t)) return advance();
+    if (isAtEnd()) throw IncompleteInputError(msg);  // REPL: 계속 입력 대기
+    throw AssemblerError(msg);
+}
 bool Parser::isAtEnd() const      { return tokens[current].type == TokenType::EOF_TOKEN; }
 Token& Parser::peek()             { return tokens[current]; }
 const Token& Parser::peek() const { return tokens[current]; }
