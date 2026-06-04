@@ -122,3 +122,14 @@ TEST(LexerTest, UnterminatedString)   { EXPECT_THROW(lex("\"hello"), AssemblerEr
 TEST(LexerTest, UnexpectedCharacter)  { EXPECT_THROW(lex("@"), AssemblerError); }
 TEST(LexerTest, SingleAmpersandError) { EXPECT_THROW(lex("&"), AssemblerError); }
 TEST(LexerTest, SinglePipeError)      { EXPECT_THROW(lex("|"), AssemblerError); }
+
+// ── 복합 표현식 ───────────────────────────────────────────────────
+TEST(LexerTest, ComplexExpression) {
+    auto t = lex("x + 3 * 2");
+    ASSERT_EQ(t.size(), 5u);
+    EXPECT_EQ(t[0].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(t[1].type, TokenType::PLUS);
+    EXPECT_EQ(t[2].type, TokenType::NUMBER);
+    EXPECT_EQ(t[3].type, TokenType::STAR);
+    EXPECT_EQ(t[4].type, TokenType::NUMBER);
+}
