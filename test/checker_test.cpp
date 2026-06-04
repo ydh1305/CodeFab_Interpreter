@@ -83,3 +83,31 @@ TEST(CheckerTest, DuplicateVarInBlock) {
     s.push_back(mock::makeBlock(std::move(inner)));
     EXPECT_THROW(checkWith(std::move(s)), CheckerError);
 }
+
+TEST(CheckerTest, ForLoopVarShadowsOuter) {
+    // for 헤더의 var i는 외부 i와 별개 스코프 → 허용
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeVarDecl("i", mock::makeLit(0.0)));
+    auto init = mock::makeVarDecl("i", mock::makeLit(0.0));
+    auto cond = std::make_unique<BinaryExpr>(
+        mock::makeVar("i"), Token(TokenType::LESS, "<"),
+        std::make_unique<LiteralExpr>(FabValue{3.0}));
+    auto incr = std::make_unique<AssignExpr>(
+        Token(TokenType::IDENTIFIER, "i"),
+        std::make_unique<BinaryExpr>(mock::makeVar("i"), Token(TokenType::PLUS, "+"),
+            std::make_unique<LiteralExpr>(FabValue{1.0})));
+    std::vector<std::unique_ptr<Stmt>> body;
+    body.push_back(std::make_unique<PrintStmt>(mock::makeVar("i")));
+    s.push_back(std::make_unique<ForStmt>(std::move(init), std::move(cond),
+                                          std::move(incr), std::make_unique<BlockStmt>(std::move(body))));
+    EXPECT_NO_THROW(checkWith(std::move(s)));
+}
+TEST(CheckerTest, DuplicateVarInBlockConfirmed) {
+    // 같은 블록 내 중복
+    std::vector<std::unique_ptr<Stmt>> inner;
+    inner.push_back(mock::makeVarDecl("x", mock::makeLit(1.0)));
+    inner.push_back(mock::makeVarDecl("x", mock::makeLit(2.0)));
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeBlock(std::move(inner)));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}

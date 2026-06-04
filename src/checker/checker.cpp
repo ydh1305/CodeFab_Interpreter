@@ -1,5 +1,4 @@
 #include "codefab/checker/checker.h"
-// [refactoring] 코드 정리 및 가독성 개선
 namespace codefab {
 void Checker::check(const std::vector<std::unique_ptr<Stmt>>& stmts) {
     beginScope();
@@ -12,9 +11,9 @@ void Checker::beginScope() { scopes.push_back({}); }
 void Checker::endScope()   { scopes.pop_back(); }
 void Checker::declare(const std::string& name) {
     if (scopes.empty()) return;
-    auto& scope = scopes.back();
-    if (scope.count(name)) throw CheckerError("Already a variable with this name in this scope. ['" + name + "']");
-    scope[name] = false;
+    auto& sc = scopes.back();
+    if (sc.count(name)) throw CheckerError("Already a variable with this name in this scope.");
+    sc[name] = false;
 }
 void Checker::define(const std::string& name) {
     if (!scopes.empty()) scopes.back()[name] = true;
