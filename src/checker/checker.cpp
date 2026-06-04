@@ -1,4 +1,5 @@
 #include "codefab/checker/checker.h"
+// [refactoring] 코드 정리 및 가독성 개선
 namespace codefab {
 void Checker::check(const std::vector<std::unique_ptr<Stmt>>& stmts) {
     beginScope();
@@ -37,8 +38,15 @@ void Checker::visitVarDeclare(const VarDeclareStmt& s) {
 }
 void Checker::visitBlock(const BlockStmt& s) { beginScope(); for(const auto& st:s.statements) checkStmt(*st); endScope(); }
 void Checker::visitIf(const IfStmt& s) { checkExpr(*s.condition); checkStmt(*s.thenBranch); if(s.elseBranch) checkStmt(*s.elseBranch); }
-// for 헤더 전용 스코프 -> 외부 변수와 for 변수 쉐도잉 허용
-void Checker::visitFor(const ForStmt& s) { beginScope(); if(s.initializer) checkStmt(*s.initializer); if(s.condition) checkExpr(*s.condition); if(s.increment) checkExpr(*s.increment); checkStmt(*s.body); endScope(); }
+// for 헤더 전용 스코프 → 외부 변수와 for 변수 쉐도잉 허용
+void Checker::visitFor(const ForStmt& s) {
+    beginScope();
+    if (s.initializer) checkStmt(*s.initializer);
+    if (s.condition)   checkExpr(*s.condition);
+    if (s.increment)   checkExpr(*s.increment);
+    checkStmt(*s.body);
+    endScope();
+}
 FabValue Checker::visitLiteral(const LiteralExpr&)        { return nullptr; }
 FabValue Checker::visitVariable(const VariableExpr& e)    { resolveVariable(e.name.origin); return nullptr; }
 FabValue Checker::visitAssign(const AssignExpr& e)        { checkExpr(*e.value); return nullptr; }
