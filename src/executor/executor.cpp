@@ -1,4 +1,5 @@
 #include "codefab/executor/executor.h"
+// [refactoring] 코드 정리 및 가독성 개선
 #include "codefab/fab_value.h"
 #include <iostream>
 #include <cmath>
@@ -52,5 +53,11 @@ FabValue Executor::visitBinary(const BinaryExpr& e) {
         default: throw RuntimeError("Unknown binary operator.");
     }
 }
-FabValue Executor::visitLogical(const LogicalExpr& e) { FabValue l=evaluate(*e.left); if(e.op.type==TokenType::OR){if(isTruthy(l))return l;}else{if(!isTruthy(l))return l;} return evaluate(*e.right); }
+FabValue Executor::visitLogical(const LogicalExpr& e) {
+    const FabValue left = evaluate(*e.left);
+    // 단락 평가(Short-circuit evaluation)
+    if (e.op.type == TokenType::OR  &&  isTruthy(left)) return left;
+    if (e.op.type == TokenType::AND && !isTruthy(left)) return left;
+    return evaluate(*e.right);
+}
 } // namespace codefab
