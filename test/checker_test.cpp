@@ -47,3 +47,23 @@ TEST(CheckerTest, ValidIfStatement) {
     s.push_back(std::make_unique<IfStmt>(std::move(cond), std::move(thenB), nullptr));
     EXPECT_NO_THROW(checkWith(std::move(s)));
 }
+
+// ── for 루프 정상·외부 스코프 참조 ──────────────────────────────
+TEST(CheckerTest, ValidForLoop) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto init = mock::makeVarDecl("i", mock::makeLit(0.0));
+    auto cond = std::make_unique<BinaryExpr>(
+        mock::makeVar("i"), Token(TokenType::LESS, "<"),
+        std::make_unique<LiteralExpr>(FabValue{3.0}));
+    auto incr = std::make_unique<AssignExpr>(
+        Token(TokenType::IDENTIFIER, "i"),
+        std::make_unique<BinaryExpr>(
+            mock::makeVar("i"), Token(TokenType::PLUS, "+"),
+            std::make_unique<LiteralExpr>(FabValue{1.0})));
+    std::vector<std::unique_ptr<Stmt>> body;
+    body.push_back(std::make_unique<PrintStmt>(mock::makeVar("i")));
+    auto forBody = std::make_unique<BlockStmt>(std::move(body));
+    s.push_back(std::make_unique<ForStmt>(std::move(init), std::move(cond),
+                                          std::move(incr), std::move(forBody)));
+    EXPECT_NO_THROW(checkWith(std::move(s)));
+}
