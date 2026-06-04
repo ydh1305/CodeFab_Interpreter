@@ -142,3 +142,42 @@ TEST_F(ExecutorTest, BlockScopeIsolation) {
     s.push_back(mock::printStmt(mock::varExpr("x")));
     run(std::move(s)); EXPECT_EQ(out(), "inner\nouter");
 }
+
+// ── 런타임 에러 처리 ─────────────────────────────────────────────
+TEST_F(ExecutorTest, DivisionByZero) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("a", mock::binExpr(mock::numLit(3.0), TokenType::SLASH, mock::numLit(0.0))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, ModuloByZero) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("a", mock::binExpr(mock::numLit(5.0), TokenType::PERCENT, mock::numLit(0.0))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, UndefinedVariable) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::varExpr("z", 1)));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, AssignUndefinedVariable) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(std::make_unique<ExpressionStmt>(
+        std::make_unique<AssignExpr>(mock::mkTok(TokenType::IDENTIFIER,"x",1), mock::numLit(5.0))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+
+TEST_F(ExecutorTest, TypeMismatchSubtraction) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(3.0), TokenType::MINUS, mock::strLit("hello"))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, TypeMismatchMultiplication) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::boolLit(true), TokenType::STAR, mock::boolLit(false))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, TypeMismatchUnaryMinus) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(std::make_unique<UnaryExpr>(Token(TokenType::MINUS,"-"), mock::strLit("hello"))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
