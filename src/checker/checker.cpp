@@ -7,23 +7,22 @@ void Checker::check(const std::vector<std::unique_ptr<Stmt>>& stmts) {
 }
 void Checker::checkStmt(const Stmt& s) { s.accept(*this); }
 void Checker::checkExpr(const Expr& e) { e.accept(*this); }
-void Checker::beginScope() { scopes.push_back({}); }
-void Checker::endScope()   { scopes.pop_back(); }
+void Checker::beginScope() { m_scopes.push_back({}); }
+void Checker::endScope()   { m_scopes.pop_back(); }
 void Checker::declare(const std::string& name) {
-    if (scopes.empty()) return;
-    auto& sc = scopes.back();
+    if (m_scopes.empty()) return;
+    auto& sc = m_scopes.back();
     if (sc.count(name)) throw CheckerError("Already a variable with this name in this scope.");
     sc[name] = false;
 }
 void Checker::define(const std::string& name) {
-    if (!scopes.empty()) scopes.back()[name] = true;
+    if (!m_scopes.empty()) m_scopes.back()[name] = true;
 }
 void Checker::resolveVariable(const std::string& name) {
-    for (int i=(int)scopes.size()-1; i>=0; --i) {
-        auto it = scopes[i].find(name);
-        if (it != scopes[i].end()) {
-            const bool isInitialized = it->second;
-            if (!isInitialized) throw CheckerError("Can't read local variable in its own initializer.");
+    for (int i=(int)m_scopes.size()-1; i>=0; --i) {
+        auto it = m_scopes[i].find(name);
+        if (it != m_scopes[i].end()) {
+            if (!it->second) throw CheckerError("Can't read local variable in its own initializer.");
             return;
         }
     }

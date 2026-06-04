@@ -124,3 +124,27 @@ TEST(CheckerTest, SelfReferenceInInitExpression) {
     s.push_back(mock::makeVarDecl("a", std::move(expr)));
     EXPECT_THROW(checkWith(std::move(s)), CheckerError);
 }
+
+TEST(CheckerTest, SelfReferenceInInitComplex) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto inner = std::make_unique<BinaryExpr>(mock::makeVar("x"), Token(TokenType::PLUS,"+"), mock::makeLit(3.0));
+    auto outer = std::make_unique<BinaryExpr>(std::make_unique<GroupingExpr>(std::move(inner)), Token(TokenType::STAR,"*"), mock::makeLit(2.0));
+    s.push_back(mock::makeVarDecl("x", std::move(outer)));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}
+TEST(CheckerTest, SelfReferenceInInnerScope) {
+    std::vector<std::unique_ptr<Stmt>> outer;
+    outer.push_back(mock::makeVarDecl("a", mock::makeLit(1.0)));
+    std::vector<std::unique_ptr<Stmt>> inner;
+    // 내부 a = a + 1 → 내부 a의 초기화식에서 내부 a 자기참조
+    auto expr = std::make_unique<BinaryExpr>(mock::makeVar("a"), Token(TokenType::PLUS,"+"), mock::makeLit(1.0));
+    inner.push_back(mock::makeVarDecl("a", std::move(expr)));
+    outer.push_back(mock::makeBlock(std::move(inner)));
+    EXPECT_THROW(checkWith(std::move(outer)), CheckerError);
+}
+TEST(CheckerTest, VariableFromOuterScopeIsOk) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeVarDecl("outer", mock::makeLit(10.0)));
+    s.push_back(mock::makeVarDecl("inner", mock::makeVar("outer")));
+    EXPECT_NO_THROW(checkWith(std::move(s)));
+}
