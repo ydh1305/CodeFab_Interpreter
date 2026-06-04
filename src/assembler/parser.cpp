@@ -43,8 +43,22 @@ std::unique_ptr<Expr> Parser::assignment()  {
     }
     return e;
 }
-std::unique_ptr<Expr> Parser::logicalOr()   { auto e=logicalAnd(); while(matchAny({TokenType::OR})){Token op=previous();e=std::make_unique<LogicalExpr>(std::move(e),op,logicalAnd());}return e; }
-std::unique_ptr<Expr> Parser::logicalAnd()  { auto e=equality();   while(matchAny({TokenType::AND})){Token op=previous();e=std::make_unique<LogicalExpr>(std::move(e),op,equality());}return e; }
+std::unique_ptr<Expr> Parser::logicalOr() {
+    auto e = logicalAnd();
+    while (matchAny({TokenType::OR})) {
+        Token op = previous();
+        e = std::make_unique<LogicalExpr>(std::move(e), op, logicalAnd());
+    }
+    return e;
+}
+std::unique_ptr<Expr> Parser::logicalAnd() {
+    auto e = equality();
+    while (matchAny({TokenType::AND})) {
+        Token op = previous();
+        e = std::make_unique<LogicalExpr>(std::move(e), op, equality());
+    }
+    return e;
+}
 std::unique_ptr<Expr> Parser::equality()    { auto e=comparison(); while(matchAny({TokenType::EQUAL_EQUAL,TokenType::BANG_EQUAL})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,comparison());}return e; }
 std::unique_ptr<Expr> Parser::comparison()  { auto e=term();       while(matchAny({TokenType::GREATER,TokenType::GREATER_EQUAL,TokenType::LESS,TokenType::LESS_EQUAL})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,term());}return e; }
 std::unique_ptr<Expr> Parser::term()        { auto e=factor();     while(matchAny({TokenType::PLUS,TokenType::MINUS})){Token op=previous();e=std::make_unique<BinaryExpr>(std::move(e),op,factor());}return e; }
