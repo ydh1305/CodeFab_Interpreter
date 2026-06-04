@@ -54,9 +54,10 @@ void Lexer::scanNumber() {
 
 void Lexer::scanIdentifier() {
     while (isAlphaNumeric(peek())) advance();
-    std::string text = source.substr(start, current - start);
-    auto it = KEYWORDS.find(text);
-    addToken((it != KEYWORDS.end()) ? it->second : TokenType::IDENTIFIER);
+    const std::string text = source.substr(start, current - start);
+    const auto it = KEYWORDS.find(text);
+    const TokenType type = (it != KEYWORDS.end()) ? it->second : TokenType::IDENTIFIER;
+    addToken(type, text);  // 텍스트를 직접 전달해 내부 substr 중복 호출 제거
 }
 
 void Lexer::addToken(TokenType t) { addToken(t, source.substr(start, current - start)); }
