@@ -46,3 +46,18 @@ TEST_F(ExecutorTest, VarUninitializedIsNull) {
     s.push_back(mock::printStmt(mock::varExpr("x")));
     run(std::move(s)); EXPECT_EQ(out(), "null");
 }
+
+// ── 산술·그룹 연산 ───────────────────────────────────────────────
+TEST_F(ExecutorTest, Addition)   { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::binExpr(mock::numLit(3.0),TokenType::PLUS,mock::numLit(4.0)))); run(std::move(s)); EXPECT_EQ(out(),"7"); }
+TEST_F(ExecutorTest, Subtraction){ std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::binExpr(mock::numLit(10.0),TokenType::MINUS,mock::numLit(3.0)))); run(std::move(s)); EXPECT_EQ(out(),"7"); }
+TEST_F(ExecutorTest, Multiplication){ std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::binExpr(mock::numLit(3.0),TokenType::STAR,mock::numLit(4.0)))); run(std::move(s)); EXPECT_EQ(out(),"12"); }
+TEST_F(ExecutorTest, Division)   { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::binExpr(mock::numLit(10.0),TokenType::SLASH,mock::numLit(4.0)))); run(std::move(s)); EXPECT_EQ(out(),"2.5"); }
+TEST_F(ExecutorTest, Modulo)     { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::binExpr(mock::numLit(10.0),TokenType::PERCENT,mock::numLit(3.0)))); run(std::move(s)); EXPECT_EQ(out(),"1"); }
+TEST_F(ExecutorTest, NegationUnary) { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(std::make_unique<UnaryExpr>(Token(TokenType::MINUS,"-"), mock::numLit(5.0)))); run(std::move(s)); EXPECT_EQ(out(),"-5"); }
+TEST_F(ExecutorTest, GroupingChangePrecedence) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto inner = mock::binExpr(mock::numLit(1.0), TokenType::PLUS, mock::numLit(2.0));
+    auto grouped = std::make_unique<GroupingExpr>(std::move(inner));
+    s.push_back(mock::printStmt(mock::binExpr(std::move(grouped), TokenType::STAR, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "9");
+}
