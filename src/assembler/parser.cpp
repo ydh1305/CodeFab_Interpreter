@@ -6,17 +6,67 @@ Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> statements;
-    while (!isAtEnd()) statements.push_back(expressionStatement());
+    while (!isAtEnd()) statements.push_back(statement());
     return statements;
 }
 
-// 구문 파싱은 다음 커밋에서 구현
-std::unique_ptr<Stmt> Parser::statement()      { return expressionStatement(); }
-std::unique_ptr<Stmt> Parser::varDeclaration() { throw AssemblerError("미구현: var"); }
-std::unique_ptr<Stmt> Parser::printStatement() { throw AssemblerError("미구현: print"); }
-std::unique_ptr<Stmt> Parser::ifStatement()    { throw AssemblerError("미구현: if"); }
-std::unique_ptr<Stmt> Parser::forStatement()   { throw AssemblerError("미구현: for"); }
-std::vector<std::unique_ptr<Stmt>> Parser::block() { return {}; }
+// ---- Statement 파싱 ----------------------------------------------------------
+
+std::unique_ptr<Stmt> Parser::statement() {
+    if (matchAny({TokenType::VAR}))        return varDeclaration();
+    if (matchAny({TokenType::PRINT}))      return printStatement();
+    if (matchAny({TokenType::IF}))         return ifStatement();
+    if (matchAny({TokenType::FOR}))        return forStatement();
+    if (matchAny({TokenType::LEFT_BRACE})) return std::make_unique<BlockStmt>(block());
+    return expressionStatement();
+}
+
+std::unique_ptr<Stmt> Parser::varDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+    std::unique_ptr<Expr> init = nullptr;
+    if (matchAny({TokenType::EQUAL})) init = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
+    return std::make_unique<VarDeclareStmt>(std::move(name), std::move(init));
+}
+
+std::unique_ptr<Stmt> Parser::printStatement() {
+    auto value = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    return std::make_unique<PrintStmt>(std::move(value));
+}
+
+std::unique_ptr<Stmt> Parser::ifStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    auto cond = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
+    auto thenB = statement();
+    std::unique_ptr<Stmt> elseB = nullptr;
+    if (matchAny({TokenType::ELSE})) elseB = statement();
+    return std::make_unique<IfStmt>(std::move(cond), std::move(thenB), std::move(elseB));
+}
+
+std::unique_ptr<Stmt> Parser::forStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+    std::unique_ptr<Stmt> init = nullptr;
+    if (matchAny({TokenType::SEMICOLON})) {}
+    else if (matchAny({TokenType::VAR})) init = varDeclaration();
+    else init = expressionStatement();
+    std::unique_ptr<Expr> cond = nullptr;
+    if (!check(TokenType::SEMICOLON)) cond = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after loop condition.");
+    std::unique_ptr<Expr> incr = nullptr;
+    if (!check(TokenType::RIGHT_PAREN)) incr = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+    auto body = statement();
+    return std::make_unique<ForStmt>(std::move(init), std::move(cond), std::move(incr), std::move(body));
+}
+
+std::vector<std::unique_ptr<Stmt>> Parser::block() {
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) stmts.push_back(statement());
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
+    return stmts;
+}
 
 std::unique_ptr<Stmt> Parser::expressionStatement() {
     auto expr = expression();
@@ -24,7 +74,9 @@ std::unique_ptr<Stmt> Parser::expressionStatement() {
     return std::make_unique<ExpressionStmt>(std::move(expr));
 }
 
+// ---- Expression 파싱 (우선순위 낮은 순) -------------------------------------
 // assignment < logicalOr < logicalAnd < equality < comparison < term < factor < unary < primary
+
 std::unique_ptr<Expr> Parser::expression() { return assignment(); }
 
 std::unique_ptr<Expr> Parser::assignment() {
