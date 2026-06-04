@@ -28,3 +28,16 @@ TEST(ParserTest, VarDeclarationString) {
     auto* lit = dynamic_cast<LiteralExpr*>(v->initializer.get());
     ASSERT_NE(lit, nullptr); EXPECT_EQ(std::get<std::string>(lit->value), "fab");
 }
+
+// ── Print·이항 표현식 ───────────────────────────────────────────
+TEST(ParserTest, PrintStatement) {
+    auto s = parseWith(mock::makeTokens({{TokenType::PRINT,"print"},{TokenType::NUMBER,"42"},{TokenType::SEMICOLON,";"}}));
+    ASSERT_NE(dynamic_cast<PrintStmt*>(s[0].get()), nullptr);
+}
+TEST(ParserTest, BinaryExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    ASSERT_NE(e, nullptr);
+    auto* b = dynamic_cast<BinaryExpr*>(e->expression.get());
+    ASSERT_NE(b, nullptr); EXPECT_EQ(b->op.type, TokenType::PLUS);
+}

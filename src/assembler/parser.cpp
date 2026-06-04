@@ -31,9 +31,8 @@ std::unique_ptr<Stmt> Parser::expressionStatement() {
     consume(TokenType::SEMICOLON, "Expect ';' after expression.");
     return std::make_unique<ExpressionStmt>(std::move(e));
 }
-std::unique_ptr<Expr> Parser::expression() {
-    return assignment();  // assignment < logicalOr < ... < primary
-}
+// ── Expression 파싱: assignment < logicalOr < ... < primary ──
+std::unique_ptr<Expr> Parser::expression()  { return assignment(); }
 std::unique_ptr<Expr> Parser::assignment()  {
     auto e = logicalOr();
     if (matchAny({TokenType::EQUAL})) {
