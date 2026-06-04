@@ -41,3 +41,16 @@ TEST(ParserTest, BinaryExpression) {
     auto* b = dynamic_cast<BinaryExpr*>(e->expression.get());
     ASSERT_NE(b, nullptr); EXPECT_EQ(b->op.type, TokenType::PLUS);
 }
+
+// ── 단항·그룹 표현식 ─────────────────────────────────────────────
+TEST(ParserTest, UnaryExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::MINUS,"-"},{TokenType::NUMBER,"5"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    auto* u = dynamic_cast<UnaryExpr*>(e->expression.get());
+    ASSERT_NE(u, nullptr); EXPECT_EQ(u->op.type, TokenType::MINUS);
+}
+TEST(ParserTest, GroupingExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::LEFT_PAREN,"("},{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"},{TokenType::RIGHT_PAREN,")"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    ASSERT_NE(dynamic_cast<GroupingExpr*>(e->expression.get()), nullptr);
+}
