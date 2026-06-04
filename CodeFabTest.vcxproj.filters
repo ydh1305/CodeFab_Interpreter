@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- ── 필터 정의 ────────────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{A2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ast">
+      <UniqueIdentifier>{A2000002-0000-0000-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\assembler">
+      <UniqueIdentifier>{A2000003-0000-0000-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\checker">
+      <UniqueIdentifier>{A2000004-0000-0000-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\executor">
+      <UniqueIdentifier>{A2000005-0000-0000-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{B2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\assembler">
+      <UniqueIdentifier>{B2000002-0000-0000-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\checker">
+      <UniqueIdentifier>{B2000003-0000-0000-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\executor">
+      <UniqueIdentifier>{B2000004-0000-0000-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Test Files">
+      <UniqueIdentifier>{C2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Google Test">
+      <UniqueIdentifier>{D2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+
+  <!-- ── 헤더 파일 매핑 ───────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <ClInclude Include="include\codefab\token.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\fab_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\code_fab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\ast\expr.h">
+      <Filter>Header Files\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\ast\stmt.h">
+      <Filter>Header Files\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\assembler\lexer.h">
+      <Filter>Header Files\assembler</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\assembler\parser.h">
+      <Filter>Header Files\assembler</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\checker\checker.h">
+      <Filter>Header Files\checker</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\executor\environment.h">
+      <Filter>Header Files\executor</Filter>
+    </ClInclude>
+    <ClInclude Include="include\codefab\executor\executor.h">
+      <Filter>Header Files\executor</Filter>
+    </ClInclude>
+  </ItemGroup>
+
+  <!-- ── 라이브러리 소스 매핑 ─────────────────────────────────────────────── -->
+  <ItemGroup>
+    <ClCompile Include="src\assembler\lexer.cpp">
+      <Filter>Source Files\assembler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\assembler\parser.cpp">
+      <Filter>Source Files\assembler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\checker\checker.cpp">
+      <Filter>Source Files\checker</Filter>
+    </ClCompile>
+    <ClCompile Include="src\executor\environment.cpp">
+      <Filter>Source Files\executor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\executor\executor.cpp">
+      <Filter>Source Files\executor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\code_fab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- ── 테스트 파일 매핑 ─────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <ClCompile Include="test\lexer_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\parser_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\checker_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\executor_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\error_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- ── Google Test 파일 매핑 ────────────────────────────────────────────── -->
+  <ItemGroup>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-all.cc">
+      <Filter>Google Test</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest_main.cc">
+      <Filter>Google Test</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+</Project>
