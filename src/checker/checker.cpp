@@ -8,7 +8,7 @@ void Checker::check(const std::vector<std::unique_ptr<Stmt>>& stmts) {
 void Checker::checkStmt(const Stmt& s) { s.accept(*this); }
 void Checker::checkExpr(const Expr& e) { e.accept(*this); }
 void Checker::beginScope() { scopes.push_back({}); }
-void Checker::endScope()   { scopes.pop_back(); }
+void Checker::endScope()   { if (!scopes.empty()) scopes.pop_back(); }
 void Checker::declare(const std::string& name) {
     if (scopes.empty()) return;
     auto& sc = scopes.back();
