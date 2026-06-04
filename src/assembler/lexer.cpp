@@ -2,11 +2,12 @@
 
 namespace codefab {
 
+// 예약어 목록: 식별자와 동일한 형태이므로 scanIdentifier에서 분류
 const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {
-    {"else",  TokenType::ELSE},  {"false", TokenType::FALSE_TOKEN},
-    {"for",   TokenType::FOR},   {"if",    TokenType::IF},
-    {"null",  TokenType::NULL_TOKEN}, {"print", TokenType::PRINT},
-    {"true",  TokenType::TRUE_TOKEN}, {"var",   TokenType::VAR},
+    {"var",   TokenType::VAR},   {"print", TokenType::PRINT},
+    {"if",    TokenType::IF},    {"else",  TokenType::ELSE},
+    {"for",   TokenType::FOR},   {"true",  TokenType::TRUE_TOKEN},
+    {"false", TokenType::FALSE_TOKEN}, {"null", TokenType::NULL_TOKEN},
 };
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {

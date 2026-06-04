@@ -47,3 +47,16 @@ TEST(LexerTest, Keywords) {
     EXPECT_EQ(t[2].type, TokenType::IF);    EXPECT_EQ(t[3].type, TokenType::ELSE);
     EXPECT_EQ(t[4].type, TokenType::FOR);
 }
+
+// ── 식별자 ──────────────────────────────────────────────────────
+TEST(LexerTest, Identifier) {
+    auto t = lex("myVariable");
+    ASSERT_EQ(t.size(), 1u);
+    EXPECT_EQ(t[0].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(t[0].origin, "myVariable");
+}
+TEST(LexerTest, IdentifierWithUnderscore) {
+    auto t = lex("_count_2");
+    ASSERT_EQ(t.size(), 1u);
+    EXPECT_EQ(t[0].type, TokenType::IDENTIFIER);
+}
