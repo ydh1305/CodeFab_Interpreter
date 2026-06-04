@@ -11,8 +11,8 @@ public:
     explicit Parser(std::vector<Token> tokens);
     std::vector<std::unique_ptr<Stmt>> parse();
 private:
-    std::vector<Token> tokens;
-    int current = 0;
+    std::vector<Token> m_tokens;
+    int m_current = 0;
     std::unique_ptr<Stmt> statement(); std::unique_ptr<Stmt> varDeclaration();
     std::unique_ptr<Stmt> printStatement(); std::unique_ptr<Stmt> ifStatement();
     std::unique_ptr<Stmt> forStatement(); std::vector<std::unique_ptr<Stmt>> block();

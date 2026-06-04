@@ -93,3 +93,28 @@ TEST(ParserTest, BlockStatement) {
     auto* b = dynamic_cast<BlockStmt*>(s[0].get());
     ASSERT_NE(b, nullptr); EXPECT_EQ(b->statements.size(), 2u);
 }
+
+// ── 파싱 에러 케이스 ─────────────────────────────────────────────
+TEST(ParserTest, MissingSemicolon) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::VAR,"var"},{TokenType::IDENTIFIER,"x"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"10"}})), AssemblerError);
+}
+TEST(ParserTest, MissingClosingParen) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::LEFT_PAREN,"("},{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"}})), AssemblerError);
+}
+TEST(ParserTest, MissingClosingBrace) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::LEFT_BRACE,"{"},{TokenType::PRINT,"print"},{TokenType::NUMBER,"1"},{TokenType::SEMICOLON,";"}})), AssemblerError);
+}
+TEST(ParserTest, InvalidAssignmentTarget) {
+    EXPECT_THROW(parseWith(mock::makeTokens({{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"3"},{TokenType::SEMICOLON,";"}})), AssemblerError);
+}
+
+// ── 연산자 우선순위 ───────────────────────────────────────────────
+TEST(ParserTest, OperatorPrecedence) {
+    // 1 + 2 * 3 → 1 + (2 * 3)
+    auto s = parseWith(mock::makeTokens({{TokenType::NUMBER,"1"},{TokenType::PLUS,"+"},{TokenType::NUMBER,"2"},{TokenType::STAR,"*"},{TokenType::NUMBER,"3"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    auto* add = dynamic_cast<BinaryExpr*>(e->expression.get());
+    ASSERT_NE(add, nullptr); EXPECT_EQ(add->op.type, TokenType::PLUS);
+    auto* mul = dynamic_cast<BinaryExpr*>(add->right.get());
+    ASSERT_NE(mul, nullptr); EXPECT_EQ(mul->op.type, TokenType::STAR);
+}

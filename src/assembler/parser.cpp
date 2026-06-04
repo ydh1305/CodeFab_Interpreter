@@ -1,6 +1,6 @@
 #include "codefab/assembler/parser.h"
 namespace codefab {
-Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
+Parser::Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)) {}
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
     std::vector<std::unique_ptr<Stmt>> stmts;
     while (!isAtEnd()) stmts.push_back(statement());
@@ -76,11 +76,11 @@ std::unique_ptr<Expr> Parser::primary() {
     throw AssemblerError("Expect expression.");
 }
 bool Parser::matchAny(std::initializer_list<TokenType> ts) { for(auto t:ts){if(check(t)){advance();return true;}}return false; }
-bool Parser::check(TokenType t) const { return !isAtEnd() && tokens[current].type == t; }
-Token& Parser::advance()  { if(!isAtEnd()) current++; return previous(); }
+bool Parser::check(TokenType t) const { return !isAtEnd() && m_tokens[m_current].type == t; }
+Token& Parser::advance()  { if(!isAtEnd()) m_current++; return previous(); }
 Token& Parser::consume(TokenType t, const std::string& msg) { if(check(t)) return advance(); if(isAtEnd()) throw IncompleteInputError(msg); throw AssemblerError(msg); }
-bool Parser::isAtEnd() const      { return tokens[current].type == TokenType::EOF_TOKEN; }
-Token& Parser::peek()             { return tokens[current]; }
-const Token& Parser::peek() const { return tokens[current]; }
-Token& Parser::previous()         { return tokens[current-1]; }
+bool Parser::isAtEnd() const      { return m_tokens[m_current].type == TokenType::EOF_TOKEN; }
+Token& Parser::peek()             { return m_tokens[m_current]; }
+const Token& Parser::peek() const { return m_tokens[m_current]; }
+Token& Parser::previous()         { return m_tokens[m_current-1]; }
 } // namespace codefab
