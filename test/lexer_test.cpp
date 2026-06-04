@@ -109,3 +109,10 @@ TEST(LexerTest, MultilineCode) {
     ASSERT_EQ(t.size(), 5u);
     EXPECT_EQ(t[0].type, TokenType::VAR); EXPECT_EQ(t[1].type, TokenType::IDENTIFIER);
 }
+
+// ── EOF 토큰 ─────────────────────────────────────────────────────
+TEST(LexerTest, AlwaysEndsWithEOF) {
+    Lexer l("42");
+    auto t = l.tokenize();
+    EXPECT_EQ(t.back().type, TokenType::EOF_TOKEN);
+}
