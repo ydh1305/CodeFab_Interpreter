@@ -165,3 +165,19 @@ TEST_F(ExecutorTest, AssignUndefinedVariable) {
         std::make_unique<AssignExpr>(mock::mkTok(TokenType::IDENTIFIER,"x",1), mock::numLit(5.0))));
     Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
 }
+
+TEST_F(ExecutorTest, TypeMismatchSubtraction) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(3.0), TokenType::MINUS, mock::strLit("hello"))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, TypeMismatchMultiplication) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::boolLit(true), TokenType::STAR, mock::boolLit(false))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, TypeMismatchUnaryMinus) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(std::make_unique<UnaryExpr>(Token(TokenType::MINUS,"-"), mock::strLit("hello"))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}

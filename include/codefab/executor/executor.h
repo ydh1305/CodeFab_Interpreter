@@ -10,7 +10,7 @@ public:
     Executor();
     void execute(const std::vector<std::unique_ptr<Stmt>>& statements);
 private:
-    std::shared_ptr<Environment> environment;
+    std::shared_ptr<Environment> m_environment;
     FabValue evaluate(const Expr& e); void executeStmt(const Stmt& s);
     void executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts, std::shared_ptr<Environment> env);
     static bool isTruthy(const FabValue& v); static bool isEqualVal(const FabValue& a, const FabValue& b);
