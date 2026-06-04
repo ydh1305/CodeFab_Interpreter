@@ -21,7 +21,10 @@ void Executor::checkNumbers(const FabValue& l, const FabValue& r, const std::str
 void Executor::visitExpression(const ExpressionStmt&) {}
 // stringify(): FabValue → 출력 문자열 (정수는 소수점 없이)
 void Executor::visitPrint(const PrintStmt& s) { std::cout << stringify(evaluate(*s.expression)) << "\n"; }
-void Executor::visitVarDeclare(const VarDeclareStmt& s) { FabValue v=nullptr; if(s.initializer) v=evaluate(*s.initializer); environment->define(s.name.origin,std::move(v)); }
+void Executor::visitVarDeclare(const VarDeclareStmt& s) {
+    const FabValue value = s.initializer ? evaluate(*s.initializer) : FabValue{nullptr};
+    environment->define(s.name.origin, value);  // nullptr이 기본값 (미초기화)
+}
 void Executor::visitBlock(const BlockStmt&)  {}
 void Executor::visitIf(const IfStmt&)        {}
 void Executor::visitFor(const ForStmt&)      {}
