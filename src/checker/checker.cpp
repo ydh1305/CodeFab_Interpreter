@@ -19,12 +19,12 @@ void Checker::define(const std::string& name) {
     if (!scopes.empty()) scopes.back()[name] = true;
 }
 void Checker::resolveVariable(const std::string& name) {
-    for (int i=(int)scopes.size()-1; i>=0; --i) {
-        auto it = scopes[i].find(name);
-        if (it != scopes[i].end()) {
-            if (!it->second) throw CheckerError("Can't read local variable in its own initializer.");
-            return;
-        }
+    for (int i = (int)scopes.size() - 1; i >= 0; --i) {
+        const auto& scope = scopes[i];
+        auto it = scope.find(name);
+        if (it == scope.end()) continue;
+        if (!it->second) throw CheckerError("Can't read local variable in its own initializer.");
+        return;
     }
 }
 void Checker::visitExpression(const ExpressionStmt& s) { checkExpr(*s.expression); }
