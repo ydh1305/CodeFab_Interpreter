@@ -1,4 +1,5 @@
 #include "codefab/assembler/lexer.h"
+// [refactoring] 코드 정리 및 가독성 개선
 
 namespace codefab {
 
@@ -60,7 +61,7 @@ void Lexer::scanToken() {
         default:
             if (isDigit(c))      scanNumber();
             else if (isAlpha(c)) scanIdentifier();
-            else throw AssemblerError(std::string("예상치 못한 문자 '") + c + "'");
+            else throw AssemblerError("예상치 못한 문자 '" + std::string(1, c) + "' (위치: " + std::to_string(m_current - 1) + ")");
     }
 }
 
