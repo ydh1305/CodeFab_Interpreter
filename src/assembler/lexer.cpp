@@ -20,7 +20,8 @@ Lexer::Lexer(std::string src) : source(std::move(src)) {
 
 std::vector<Token> Lexer::tokenize() {
     while (!isAtEnd()) { start = current; scanToken(); }
-    tokens.emplace_back(TokenType::EOF_TOKEN, "", line);  // EOF에 줄 번호 포함
+    // 항상 EOF_TOKEN으로 마무리하여 Parser가 명확한 종료 조건을 가짐
+    tokens.emplace_back(TokenType::EOF_TOKEN, "");
     return std::move(tokens);
 }
 

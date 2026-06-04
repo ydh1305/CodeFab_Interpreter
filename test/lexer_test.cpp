@@ -116,3 +116,9 @@ TEST(LexerTest, AlwaysEndsWithEOF) {
     auto t = l.tokenize();
     EXPECT_EQ(t.back().type, TokenType::EOF_TOKEN);
 }
+
+// ── 에러 케이스 ──────────────────────────────────────────────────
+TEST(LexerTest, UnterminatedString)   { EXPECT_THROW(lex("\"hello"), AssemblerError); }
+TEST(LexerTest, UnexpectedCharacter)  { EXPECT_THROW(lex("@"), AssemblerError); }
+TEST(LexerTest, SingleAmpersandError) { EXPECT_THROW(lex("&"), AssemblerError); }
+TEST(LexerTest, SinglePipeError)      { EXPECT_THROW(lex("|"), AssemblerError); }
