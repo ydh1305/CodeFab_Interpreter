@@ -9,7 +9,7 @@ class Checker : public ExprVisitor, public StmtVisitor {
 public:
     void check(const std::vector<std::unique_ptr<Stmt>>& statements);
 private:
-    std::vector<std::unordered_map<std::string, bool>> scopes;
+    std::vector<std::unordered_map<std::string, bool>> m_scopes;
     void checkStmt(const Stmt& s); void checkExpr(const Expr& e);
     void beginScope(); void endScope();
     void declare(const std::string& name); void define(const std::string& name);
