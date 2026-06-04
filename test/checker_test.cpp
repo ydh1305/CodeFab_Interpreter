@@ -26,3 +26,24 @@ TEST(CheckerTest, ValidOuterScopeReference) {
     s.push_back(mock::makeVarDecl("y", mock::makeVar("x")));
     EXPECT_NO_THROW(checkWith(std::move(s)));
 }
+
+// ── 쉐도잉·for 루프 정상 케이스 ─────────────────────────────────
+TEST(CheckerTest, ValidShadowingInInnerScope) {
+    std::vector<std::unique_ptr<Stmt>> outer;
+    outer.push_back(mock::makeVarDecl("a", mock::makeLit(1.0)));
+    std::vector<std::unique_ptr<Stmt>> inner;
+    inner.push_back(mock::makeVarDecl("a", mock::makeLit(2.0)));
+    outer.push_back(mock::makeBlock(std::move(inner)));
+    EXPECT_NO_THROW(checkWith(std::move(outer)));
+}
+TEST(CheckerTest, ValidIfStatement) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeVarDecl("x", mock::makeLit(10.0)));
+    auto cond = std::make_unique<BinaryExpr>(
+        mock::makeVar("x"), Token(TokenType::GREATER, ">"),
+        std::make_unique<LiteralExpr>(FabValue{5.0}));
+    auto thenB = std::make_unique<PrintStmt>(
+        std::make_unique<LiteralExpr>(FabValue{std::string("big")}));
+    s.push_back(std::make_unique<IfStmt>(std::move(cond), std::move(thenB), nullptr));
+    EXPECT_NO_THROW(checkWith(std::move(s)));
+}
