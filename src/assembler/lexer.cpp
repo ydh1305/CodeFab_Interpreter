@@ -45,11 +45,13 @@ void Lexer::scanToken() {
         case '<': addToken(match('=') ? TokenType::LESS_EQUAL  : TokenType::LESS);          break;
         case '&':
             if (match('&')) addToken(TokenType::AND);
-            else throw AssemblerError("예상치 못한 문자 '&'");
+            else throw AssemblerError(
+                std::string("예상치 못한 문자 '&' (위치: ") + std::to_string(current) + ")");
             break;
         case '|':
             if (match('|')) addToken(TokenType::OR);
-            else throw AssemblerError("예상치 못한 문자 '|'");
+            else throw AssemblerError(
+                std::string("예상치 못한 문자 '|' (위치: ") + std::to_string(current) + ")");
             break;
         case ' ': case '\r': case '\t': break;
         case '\n': line++; break;
@@ -57,7 +59,9 @@ void Lexer::scanToken() {
         default:
             if (isDigit(c))      scanNumber();
             else if (isAlpha(c)) scanIdentifier();
-            else throw AssemblerError(std::string("예상치 못한 문자 '") + c + "'");
+            else throw AssemblerError(
+                std::string("예상치 못한 문자 '") + c +
+                "' (위치: " + std::to_string(current) + ")");
     }
 }
 
