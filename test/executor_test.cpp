@@ -116,3 +116,29 @@ TEST_F(ExecutorTest, ShortCircuitAnd) {
     s.push_back(mock::printStmt(std::make_unique<LogicalExpr>(mock::varExpr("x"), Token(TokenType::AND,"&&"), mock::boolLit(true))));
     run(std::move(s)); EXPECT_EQ(out(), "false");
 }
+
+// ── if·else ───────────────────────────────────────────────────────
+TEST_F(ExecutorTest, IfThenBranch) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto thenB = mock::printStmt(mock::strLit("yes"));
+    s.push_back(std::make_unique<IfStmt>(mock::boolLit(true), std::move(thenB), nullptr));
+    run(std::move(s)); EXPECT_EQ(out(), "yes");
+}
+TEST_F(ExecutorTest, IfElseBranch) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto thenB = mock::printStmt(mock::strLit("yes"));
+    auto elseB = mock::printStmt(mock::strLit("no"));
+    s.push_back(std::make_unique<IfStmt>(mock::boolLit(false), std::move(thenB), std::move(elseB)));
+    run(std::move(s)); EXPECT_EQ(out(), "no");
+}
+// ── for 루프·스코프 ──────────────────────────────────────────────
+TEST_F(ExecutorTest, BlockScopeIsolation) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x", mock::strLit("outer")));
+    std::vector<std::unique_ptr<Stmt>> inner;
+    inner.push_back(mock::varDecl("x", mock::strLit("inner")));
+    inner.push_back(mock::printStmt(mock::varExpr("x")));
+    s.push_back(std::make_unique<BlockStmt>(std::move(inner)));
+    s.push_back(mock::printStmt(mock::varExpr("x")));
+    run(std::move(s)); EXPECT_EQ(out(), "inner\nouter");
+}
