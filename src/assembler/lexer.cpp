@@ -35,10 +35,24 @@ void Lexer::scanToken() {
             if (match('/')) { while (peek() != '\n' && !isAtEnd()) advance(); }
             else addToken(TokenType::SLASH);
             break;
-        case '!': addToken(match('=') ? TokenType::BANG_EQUAL  : TokenType::BANG);  break;
-        case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL); break;
-        case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER);break;
-        case '<': addToken(match('=') ? TokenType::LESS_EQUAL   : TokenType::LESS);  break;
+        // 두 글자 연산자: match()로 다음 문자 확인
+        case '!': addToken(match('=') ? TokenType::BANG_EQUAL  : TokenType::BANG);      break;
+        case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL);     break;
+        case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
+        case '<': addToken(match('=') ? TokenType::LESS_EQUAL  : TokenType::LESS);      break;
+        case '&':
+            if (match('&')) addToken(TokenType::AND);
+            else throw AssemblerError(std::string("예상치 못한 문자 '&' (위치: ") + std::to_string(current) + ")");
+            break;
+        case '|':
+            if (match('|')) addToken(TokenType::OR);
+            else throw AssemblerError(std::string("예상치 못한 문자 '|' (위치: ") + std::to_string(current) + ")");
+            break;
+        case ';': addToken(TokenType::SEMICOLON);   break;
+        case '{': addToken(TokenType::LEFT_BRACE);  break;
+        case '}': addToken(TokenType::RIGHT_BRACE); break;
+        case '(': addToken(TokenType::LEFT_PAREN);  break;
+        case ')': addToken(TokenType::RIGHT_PAREN); break;
         case ' ': case '\r': case '\t': break;
         case '\n': line++; break;
         case '"': scanString(); break;

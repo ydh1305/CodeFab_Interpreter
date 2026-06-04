@@ -76,3 +76,20 @@ TEST(LexerTest, ComparisonOperators) {
     EXPECT_EQ(t[2].type, TokenType::LESS);          EXPECT_EQ(t[3].type, TokenType::LESS_EQUAL);
     EXPECT_EQ(t[4].type, TokenType::EQUAL_EQUAL);   EXPECT_EQ(t[5].type, TokenType::BANG_EQUAL);
 }
+
+TEST(LexerTest, LogicalOperators) {
+    auto t = lex("&& ||");
+    ASSERT_EQ(t.size(), 2u);
+    EXPECT_EQ(t[0].type, TokenType::AND); EXPECT_EQ(t[1].type, TokenType::OR);
+}
+TEST(LexerTest, AssignmentOperator) {
+    auto t = lex("=");
+    ASSERT_EQ(t.size(), 1u); EXPECT_EQ(t[0].type, TokenType::EQUAL);
+}
+TEST(LexerTest, Delimiters) {
+    auto t = lex("; { } ( )");
+    ASSERT_EQ(t.size(), 5u);
+    EXPECT_EQ(t[0].type, TokenType::SEMICOLON);   EXPECT_EQ(t[1].type, TokenType::LEFT_BRACE);
+    EXPECT_EQ(t[2].type, TokenType::RIGHT_BRACE); EXPECT_EQ(t[3].type, TokenType::LEFT_PAREN);
+    EXPECT_EQ(t[4].type, TokenType::RIGHT_PAREN);
+}
