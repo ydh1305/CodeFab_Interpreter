@@ -1,50 +1,41 @@
 #include <gtest/gtest.h>
+#include "codefab/assembler/lexer.h"   // Parser PR 병합 후 실제 파이프라인 연동
+#include "codefab/assembler/parser.h"
 #include "codefab/checker/checker.h"
 #include "codefab/errors.h"
-#include "mock/mock_parser.h"   // Parser 미병합으로 AST를 직접 생성하여 테스트
 
 using namespace codefab;
 
-// Parser가 feature/parser 브랜치에서 개발 중이므로 Mock AST로 대체
-static void checkWith(std::vector<std::unique_ptr<Stmt>> stmts) {
+// Parser PR #2 병합 완료 → Mock AST 제거, 실제 Lexer+Parser 파이프라인으로 전환
+static void checkSource(const std::string& source) {
+    Lexer lexer(source);
+    auto tokens = lexer.tokenize();
+    Parser parser(std::move(tokens));
+    auto stmts = parser.parse();
     Checker checker;
     checker.check(stmts);
 }
 
-TEST(CheckerTest, ValidVarDeclaration_MockAST) {
-    std::vector<std::unique_ptr<Stmt>> stmts;
-    stmts.push_back(mock::makeVarDecl("a", mock::makeLit(10.0)));
-    EXPECT_NO_THROW(checkWith(std::move(stmts)));
-}
+TEST(CheckerTest, ValidVarDeclaration)      { EXPECT_NO_THROW(checkSource("var a = 10;")); }
+TEST(CheckerTest, ValidVarReference)        { EXPECT_NO_THROW(checkSource("var a = 10; print a;")); }
+TEST(CheckerTest, ValidShadowingInBlock)    { EXPECT_NO_THROW(checkSource("var a=1; { var a=2; }")); }
+TEST(CheckerTest, ValidForLoop)             { EXPECT_NO_THROW(checkSource("for(var i=0;i<3;i=i+1){print i;}")); }
 
-TEST(CheckerTest, DuplicateVarInScope_MockAST) {
-    std::vector<std::unique_ptr<Stmt>> stmts;
-    stmts.push_back(mock::makeVarDecl("a"));
-    stmts.push_back(mock::makeVarDecl("a")); // 동일 스코프 중복
-    EXPECT_THROW(checkWith(std::move(stmts)), CheckerError);
+TEST(CheckerTest, DuplicateVarInGlobalScope) {
+    EXPECT_THROW(checkSource("var a=1; var a=2;"), CheckerError);
 }
-
-TEST(CheckerTest, SelfReferenceInInit_MockAST) {
-    // var a = a; — 자기 참조
-    std::vector<std::unique_ptr<Stmt>> stmts;
-    stmts.push_back(mock::makeVarDecl("a", mock::makeVar("a")));
-    EXPECT_THROW(checkWith(std::move(stmts)), CheckerError);
+TEST(CheckerTest, DuplicateVarInBlock) {
+    EXPECT_THROW(checkSource("{ var b=1; var b=2; }"), CheckerError);
 }
-
-TEST(CheckerTest, ValidShadowingInBlock_MockAST) {
-    std::vector<std::unique_ptr<Stmt>> outer;
-    outer.push_back(mock::makeVarDecl("a", mock::makeLit(1.0)));
-    std::vector<std::unique_ptr<Stmt>> inner;
-    inner.push_back(mock::makeVarDecl("a", mock::makeLit(2.0))); // 다른 스코프 → OK
-    outer.push_back(mock::makeBlock(std::move(inner)));
-    EXPECT_NO_THROW(checkWith(std::move(outer)));
+TEST(CheckerTest, SelfReferenceInInit) {
+    EXPECT_THROW(checkSource("var a = a;"), CheckerError);
 }
-
-TEST(CheckerTest, DuplicateVarInBlock_MockAST) {
-    std::vector<std::unique_ptr<Stmt>> inner;
-    inner.push_back(mock::makeVarDecl("b"));
-    inner.push_back(mock::makeVarDecl("b")); // 같은 블록 → 에러
-    std::vector<std::unique_ptr<Stmt>> stmts;
-    stmts.push_back(mock::makeBlock(std::move(inner)));
-    EXPECT_THROW(checkWith(std::move(stmts)), CheckerError);
+TEST(CheckerTest, SelfReferenceInInitExpression) {
+    EXPECT_THROW(checkSource("var a = a + 1;"), CheckerError);
+}
+TEST(CheckerTest, SelfReferenceInInnerScope) {
+    EXPECT_THROW(checkSource("var a=1; { var a = a + 1; }"), CheckerError);
+}
+TEST(CheckerTest, ForLoopVarShadowsOuter) {
+    EXPECT_NO_THROW(checkSource("var i=0; for(var i=0;i<3;i=i+1){print i;}"));
 }
