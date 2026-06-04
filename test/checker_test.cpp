@@ -6,9 +6,13 @@
 using namespace codefab;
 
 // Parser PR #4~#7 병합 완료 -> Mock AST 제거, 실제 파이프라인으로 전환
+// parseAndCheck(): Parsing + Semantic analysis 분리 → 단일 책임
+static std::vector<std::unique_ptr<Stmt>> parseToStmts(const std::string& src) {
+    Lexer l(src); auto t = l.tokenize();
+    Parser p(std::move(t)); return p.parse();
+}
 static void checkSource(const std::string& source) {
-    Lexer lexer(source); auto tokens = lexer.tokenize();
-    Parser parser(std::move(tokens)); auto stmts = parser.parse();
+    auto stmts = parseToStmts(source);
     Checker checker; checker.check(stmts);
 }
 
