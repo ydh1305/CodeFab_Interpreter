@@ -35,13 +35,42 @@ void Executor::checkNumbers(const FabValue& l, const FabValue& r, const std::str
         throw RuntimeError("Operands must be numbers.");
 }
 
-// ---- 구문 실행 (다음 커밋에서 구현) -----------------------------------------
-void Executor::visitExpression(const ExpressionStmt&) {}
-void Executor::visitPrint(const PrintStmt&)           {}
-void Executor::visitVarDeclare(const VarDeclareStmt&) {}
-void Executor::visitBlock(const BlockStmt&)           {}
-void Executor::visitIf(const IfStmt&)                 {}
-void Executor::visitFor(const ForStmt&)               {}
+// ---- 구문 실행 ---------------------------------------------------------------
+
+void Executor::visitExpression(const ExpressionStmt& s) { evaluate(*s.expression); }
+
+void Executor::visitPrint(const PrintStmt& s) {
+    std::cout << stringify(evaluate(*s.expression)) << "\n";
+}
+
+void Executor::visitVarDeclare(const VarDeclareStmt& s) {
+    FabValue val = nullptr;
+    if (s.initializer) val = evaluate(*s.initializer);
+    environment->define(s.name.origin, std::move(val));
+}
+
+void Executor::visitBlock(const BlockStmt& s) {
+    executeBlock(s.statements, std::make_shared<Environment>(environment));
+}
+
+void Executor::visitIf(const IfStmt& s) {
+    if (isTruthy(evaluate(*s.condition))) executeStmt(*s.thenBranch);
+    else if (s.elseBranch)               executeStmt(*s.elseBranch);
+}
+
+void Executor::visitFor(const ForStmt& s) {
+    auto forEnv = std::make_shared<Environment>(environment);
+    auto prev = environment;
+    environment = forEnv;
+    try {
+        if (s.initializer) executeStmt(*s.initializer);
+        while (!s.condition || isTruthy(evaluate(*s.condition))) {
+            executeStmt(*s.body);
+            if (s.increment) evaluate(*s.increment);
+        }
+    } catch (...) { environment = prev; throw; }
+    environment = prev;
+}
 
 // ---- 표현식 평가 -------------------------------------------------------------
 
@@ -83,14 +112,14 @@ FabValue Executor::visitBinary(const BinaryExpr& e) {
             if (std::holds_alternative<std::string>(l) && std::holds_alternative<std::string>(r))
                 return std::get<std::string>(l) + std::get<std::string>(r);
             throw RuntimeError("Operands must be two numbers or two strings.");
-        case TokenType::MINUS:       checkNumbers(l,r,e.op.origin); return std::get<double>(l) - std::get<double>(r);
-        case TokenType::STAR:        checkNumbers(l,r,e.op.origin); return std::get<double>(l) * std::get<double>(r);
+        case TokenType::MINUS:       checkNumbers(l,r,e.op.origin); return std::get<double>(l)-std::get<double>(r);
+        case TokenType::STAR:        checkNumbers(l,r,e.op.origin); return std::get<double>(l)*std::get<double>(r);
         case TokenType::SLASH:       checkNumbers(l,r,e.op.origin);
             if (std::get<double>(r)==0.0) throw RuntimeError("Division by zero.");
-            return std::get<double>(l) / std::get<double>(r);
+            return std::get<double>(l)/std::get<double>(r);
         case TokenType::PERCENT:     checkNumbers(l,r,e.op.origin);
             if (std::get<double>(r)==0.0) throw RuntimeError("Division by zero (modulo).");
-            return std::fmod(std::get<double>(l), std::get<double>(r));
+            return std::fmod(std::get<double>(l),std::get<double>(r));
         case TokenType::GREATER:       checkNumbers(l,r,e.op.origin); return std::get<double>(l)>std::get<double>(r);
         case TokenType::GREATER_EQUAL: checkNumbers(l,r,e.op.origin); return std::get<double>(l)>=std::get<double>(r);
         case TokenType::LESS:          checkNumbers(l,r,e.op.origin); return std::get<double>(l)<std::get<double>(r);
