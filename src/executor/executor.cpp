@@ -23,9 +23,20 @@ void Executor::visitExpression(const ExpressionStmt&) {}
 void Executor::visitPrint(const PrintStmt& s) { std::cout << stringify(evaluate(*s.expression)) << "\n"; }
 // 미초기화 변수는 null로 초기화
 void Executor::visitVarDeclare(const VarDeclareStmt& s) { FabValue v=nullptr; if(s.initializer) v=evaluate(*s.initializer); environment->define(s.name.origin,std::move(v)); }
-void Executor::visitBlock(const BlockStmt&)  {}
-void Executor::visitIf(const IfStmt&)        {}
-void Executor::visitFor(const ForStmt&)      {}
+void Executor::visitBlock(const BlockStmt& s) { executeBlock(s.statements, std::make_shared<Environment>(environment)); }
+void Executor::visitIf(const IfStmt& s) { if(isTruthy(evaluate(*s.condition))) executeStmt(*s.thenBranch); else if(s.elseBranch) executeStmt(*s.elseBranch); }
+void Executor::visitFor(const ForStmt& s) {
+    auto forEnv = std::make_shared<Environment>(environment);
+    auto prev = environment; environment = forEnv;
+    try {
+        if (s.initializer) executeStmt(*s.initializer);
+        while (!s.condition || isTruthy(evaluate(*s.condition))) {
+            executeStmt(*s.body);
+            if (s.increment) evaluate(*s.increment);
+        }
+    } catch (...) { environment = prev; throw; }
+    environment = prev;
+}
 // 표현식 평가
 FabValue Executor::visitLiteral(const LiteralExpr& e)   { return e.value; }
 FabValue Executor::visitVariable(const VariableExpr& e) { try { return environment->get(e.name.origin); } catch(const RuntimeError&) { throw RuntimeError("[line "+std::to_string(e.name.line)+"] Undefined variable '"+e.name.origin+"'."); } }

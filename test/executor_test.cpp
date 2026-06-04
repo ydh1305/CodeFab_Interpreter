@@ -61,3 +61,84 @@ TEST_F(ExecutorTest, GroupingChangePrecedence) {
     s.push_back(mock::printStmt(mock::binExpr(std::move(grouped), TokenType::STAR, mock::numLit(3.0))));
     run(std::move(s)); EXPECT_EQ(out(), "9");
 }
+
+// ── 문자열·비교 연산 ─────────────────────────────────────────────
+TEST_F(ExecutorTest, StringConcat) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::strLit("hello"), TokenType::PLUS, mock::strLit(" world"))));
+    run(std::move(s)); EXPECT_EQ(out(), "hello world");
+}
+TEST_F(ExecutorTest, StringNumberConcatIsError) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::strLit("count: "), TokenType::PLUS, mock::numLit(5.0))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, GreaterThan) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::GREATER, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, LessThan) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(2.0), TokenType::LESS, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, EqualEqual) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::EQUAL_EQUAL, mock::numLit(5.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, BangEqual) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::BANG_EQUAL, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+
+// ── 논리 연산·단락 평가 ──────────────────────────────────────────
+TEST_F(ExecutorTest, LogicalAnd) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(std::make_unique<LogicalExpr>(mock::boolLit(true), Token(TokenType::AND,"&&"), mock::boolLit(false))));
+    run(std::move(s)); EXPECT_EQ(out(), "false");
+}
+TEST_F(ExecutorTest, LogicalOr) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(std::make_unique<LogicalExpr>(mock::boolLit(false), Token(TokenType::OR,"||"), mock::boolLit(true))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, LogicalNot) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(std::make_unique<UnaryExpr>(Token(TokenType::BANG,"!"), mock::boolLit(true))));
+    run(std::move(s)); EXPECT_EQ(out(), "false");
+}
+TEST_F(ExecutorTest, ShortCircuitAnd) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x", mock::boolLit(false)));
+    s.push_back(mock::printStmt(std::make_unique<LogicalExpr>(mock::varExpr("x"), Token(TokenType::AND,"&&"), mock::boolLit(true))));
+    run(std::move(s)); EXPECT_EQ(out(), "false");
+}
+
+// ── if·else ───────────────────────────────────────────────────────
+TEST_F(ExecutorTest, IfThenBranch) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto thenB = mock::printStmt(mock::strLit("yes"));
+    s.push_back(std::make_unique<IfStmt>(mock::boolLit(true), std::move(thenB), nullptr));
+    run(std::move(s)); EXPECT_EQ(out(), "yes");
+}
+TEST_F(ExecutorTest, IfElseBranch) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    auto thenB = mock::printStmt(mock::strLit("yes"));
+    auto elseB = mock::printStmt(mock::strLit("no"));
+    s.push_back(std::make_unique<IfStmt>(mock::boolLit(false), std::move(thenB), std::move(elseB)));
+    run(std::move(s)); EXPECT_EQ(out(), "no");
+}
+// ── for 루프·스코프 ──────────────────────────────────────────────
+TEST_F(ExecutorTest, BlockScopeIsolation) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x", mock::strLit("outer")));
+    std::vector<std::unique_ptr<Stmt>> inner;
+    inner.push_back(mock::varDecl("x", mock::strLit("inner")));
+    inner.push_back(mock::printStmt(mock::varExpr("x")));
+    s.push_back(std::make_unique<BlockStmt>(std::move(inner)));
+    s.push_back(mock::printStmt(mock::varExpr("x")));
+    run(std::move(s)); EXPECT_EQ(out(), "inner\nouter");
+}
