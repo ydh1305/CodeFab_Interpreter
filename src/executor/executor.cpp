@@ -1,5 +1,4 @@
 #include "codefab/executor/executor.h"
-// [refactoring] 코드 정리 및 가독성 개선
 #include "codefab/fab_value.h"
 #include <iostream>
 #include <cmath>
@@ -36,13 +35,10 @@ FabValue Executor::visitUnary(const UnaryExpr& e)       { FabValue op=evaluate(*
 FabValue Executor::visitBinary(const BinaryExpr& e) {
     FabValue l=evaluate(*e.left), r=evaluate(*e.right);
     switch(e.op.type) {
-        case TokenType::PLUS: {
-            const bool bothNums = std::holds_alternative<double>(l) && std::holds_alternative<double>(r);
-            const bool bothStrs = std::holds_alternative<std::string>(l) && std::holds_alternative<std::string>(r);
-            if (bothNums) return std::get<double>(l) + std::get<double>(r);
-            if (bothStrs) return std::get<std::string>(l) + std::get<std::string>(r);
+        case TokenType::PLUS:
+            if(std::holds_alternative<double>(l)&&std::holds_alternative<double>(r)) return std::get<double>(l)+std::get<double>(r);
+            if(std::holds_alternative<std::string>(l)&&std::holds_alternative<std::string>(r)) return std::get<std::string>(l)+std::get<std::string>(r);
             throw RuntimeError("Operands must be two numbers or two strings.");
-        }
         case TokenType::MINUS: checkNumbers(l,r,e.op.origin); return std::get<double>(l)-std::get<double>(r);
         case TokenType::STAR:  checkNumbers(l,r,e.op.origin); return std::get<double>(l)*std::get<double>(r);
         case TokenType::SLASH: checkNumbers(l,r,e.op.origin); if(std::get<double>(r)==0.0) throw RuntimeError("Division by zero."); return std::get<double>(l)/std::get<double>(r);
