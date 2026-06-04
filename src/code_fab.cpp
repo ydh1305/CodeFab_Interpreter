@@ -35,16 +35,18 @@ void CodeFab::run(const std::string& source, Executor& executor) {
     }
 }
 
+// 파일에서 소스를 읽어 run()에 전달 (UTF-8 인코딩 파일 지원)
 void CodeFab::runFile(const std::string& path) {
     std::ifstream file(path);
-    if (!file.is_open()) {
-        std::cerr << "파일을 열 수 없습니다: " << path << "\n";
+    if (!file) {
+        std::cerr << "[Error] 파일을 열 수 없습니다: " << path << "\n";
         return;
     }
-    std::ostringstream ss;
-    ss << file.rdbuf();
+    // istreambuf_iterator: ostringstream 없이 직접 읽기 (관용적 C++)
+    const std::string source(std::istreambuf_iterator<char>(file),
+                             std::istreambuf_iterator<char>{});
     Executor executor;
-    run(ss.str(), executor);
+    run(source, executor);
 }
 
 } // namespace codefab
