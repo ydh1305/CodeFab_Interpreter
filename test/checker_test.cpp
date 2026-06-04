@@ -67,3 +67,19 @@ TEST(CheckerTest, ValidForLoop) {
                                           std::move(incr), std::move(forBody)));
     EXPECT_NO_THROW(checkWith(std::move(s)));
 }
+
+// ── 중복 선언 검사 ───────────────────────────────────────────────
+TEST(CheckerTest, DuplicateVarInGlobalScope) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeVarDecl("a", mock::makeLit(1.0)));
+    s.push_back(mock::makeVarDecl("a", mock::makeLit(2.0)));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}
+TEST(CheckerTest, DuplicateVarInBlock) {
+    std::vector<std::unique_ptr<Stmt>> inner;
+    inner.push_back(mock::makeVarDecl("b"));
+    inner.push_back(mock::makeVarDecl("b"));
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::makeBlock(std::move(inner)));
+    EXPECT_THROW(checkWith(std::move(s)), CheckerError);
+}
