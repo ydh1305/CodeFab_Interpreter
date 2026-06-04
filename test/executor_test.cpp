@@ -24,3 +24,25 @@ TEST_F(ExecutorTest, PrintString)     { std::vector<std::unique_ptr<Stmt>> s; s.
 TEST_F(ExecutorTest, PrintTrue)       { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::boolLit(true))); run(std::move(s)); EXPECT_EQ(out(),"true"); }
 TEST_F(ExecutorTest, PrintFalse)      { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::boolLit(false)));run(std::move(s)); EXPECT_EQ(out(),"false"); }
 TEST_F(ExecutorTest, PrintNull)       { std::vector<std::unique_ptr<Stmt>> s; s.push_back(mock::printStmt(mock::nullLit()));     run(std::move(s)); EXPECT_EQ(out(),"null"); }
+
+// ── 변수 선언·대입 ───────────────────────────────────────────────
+TEST_F(ExecutorTest, VarDeclareAndPrint) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x", mock::numLit(10.0)));
+    s.push_back(mock::printStmt(mock::varExpr("x")));
+    run(std::move(s)); EXPECT_EQ(out(), "10");
+}
+TEST_F(ExecutorTest, VarAssign) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x", mock::numLit(0.0)));
+    s.push_back(std::make_unique<ExpressionStmt>(
+        std::make_unique<AssignExpr>(mock::mkTok(TokenType::IDENTIFIER,"x"), mock::numLit(42.0))));
+    s.push_back(mock::printStmt(mock::varExpr("x")));
+    run(std::move(s)); EXPECT_EQ(out(), "42");
+}
+TEST_F(ExecutorTest, VarUninitializedIsNull) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::varDecl("x"));
+    s.push_back(mock::printStmt(mock::varExpr("x")));
+    run(std::move(s)); EXPECT_EQ(out(), "null");
+}
