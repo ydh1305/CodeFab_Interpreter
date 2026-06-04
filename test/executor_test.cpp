@@ -61,3 +61,35 @@ TEST_F(ExecutorTest, GroupingChangePrecedence) {
     s.push_back(mock::printStmt(mock::binExpr(std::move(grouped), TokenType::STAR, mock::numLit(3.0))));
     run(std::move(s)); EXPECT_EQ(out(), "9");
 }
+
+// ── 문자열·비교 연산 ─────────────────────────────────────────────
+TEST_F(ExecutorTest, StringConcat) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::strLit("hello"), TokenType::PLUS, mock::strLit(" world"))));
+    run(std::move(s)); EXPECT_EQ(out(), "hello world");
+}
+TEST_F(ExecutorTest, StringNumberConcatIsError) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::strLit("count: "), TokenType::PLUS, mock::numLit(5.0))));
+    Executor e; EXPECT_THROW(e.execute(s), RuntimeError);
+}
+TEST_F(ExecutorTest, GreaterThan) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::GREATER, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, LessThan) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(2.0), TokenType::LESS, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, EqualEqual) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::EQUAL_EQUAL, mock::numLit(5.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
+TEST_F(ExecutorTest, BangEqual) {
+    std::vector<std::unique_ptr<Stmt>> s;
+    s.push_back(mock::printStmt(mock::binExpr(mock::numLit(5.0), TokenType::BANG_EQUAL, mock::numLit(3.0))));
+    run(std::move(s)); EXPECT_EQ(out(), "true");
+}
