@@ -1,4 +1,5 @@
 #include "codefab/assembler/parser.h"
+// [refactoring] 코드 정리 및 가독성 개선
 namespace codefab {
 Parser::Parser(std::vector<Token> toks) : tokens(std::move(toks)) {}
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
@@ -12,7 +13,7 @@ std::unique_ptr<Stmt> Parser::statement() {
     return expressionStatement();
 }
 std::unique_ptr<Stmt> Parser::varDeclaration() {
-    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+    Token name = consume(TokenType::IDENTIFIER, "Expect variable name after 'var'. Got: '" + (isAtEnd() ? "EOF" : std::string(1, peek().origin[0])) + "'"  );
     std::unique_ptr<Expr> init = nullptr;
     if (matchAny({TokenType::EQUAL})) init = expression();
     consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
