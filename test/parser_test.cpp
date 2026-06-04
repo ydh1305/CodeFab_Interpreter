@@ -12,6 +12,16 @@ static std::vector<std::unique_ptr<Stmt>> parse(const std::string& source) {
     Parser parser(std::move(tokens));
     return parser.parse();
 }
+// 단일 구문 파싱 편의 함수 (테스트 보일러플레이트 감소)
+static std::unique_ptr<Stmt> parseOne(const std::string& source) {
+    auto stmts = parse(source);
+    return stmts.empty() ? nullptr : std::move(stmts[0]);
+}
+// 단일 구문 파싱 편의 함수 (테스트 보일러플레이트 감소)
+static std::unique_ptr<Stmt> parseOne(const std::string& source) {
+    auto stmts = parse(source);
+    return stmts.empty() ? nullptr : std::move(stmts[0]);
+}
 
 TEST(ParserTest, VarDeclarationWithInit) { auto s=parse("var x = 10;"); ASSERT_EQ(s.size(),1u); auto* v=dynamic_cast<VarDeclareStmt*>(s[0].get()); ASSERT_NE(v,nullptr); EXPECT_EQ(v->name.origin,"x"); }
 TEST(ParserTest, VarDeclarationWithoutInit) { auto s=parse("var x;"); auto* v=dynamic_cast<VarDeclareStmt*>(s[0].get()); ASSERT_NE(v,nullptr); EXPECT_EQ(v->initializer,nullptr); }
