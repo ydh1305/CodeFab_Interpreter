@@ -2,7 +2,12 @@
 
 namespace codefab {
 
-const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {};
+const std::unordered_map<std::string, TokenType> Lexer::KEYWORDS = {
+    {"var",   TokenType::VAR},   {"print", TokenType::PRINT},
+    {"if",    TokenType::IF},    {"else",  TokenType::ELSE},
+    {"for",   TokenType::FOR},   {"true",  TokenType::TRUE_TOKEN},
+    {"false", TokenType::FALSE_TOKEN}, {"null", TokenType::NULL_TOKEN},
+};
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {
     // UTF-8 BOM(EF BB BF) 자동 제거 — Windows 에디터가 삽입하는 BOM 방지
@@ -48,7 +53,9 @@ void Lexer::scanNumber() {
 
 void Lexer::scanIdentifier() {
     while (isAlphaNumeric(peek())) advance();
-    addToken(TokenType::IDENTIFIER);
+    std::string text = source.substr(start, current - start);
+    auto it = KEYWORDS.find(text);
+    addToken((it != KEYWORDS.end()) ? it->second : TokenType::IDENTIFIER);
 }
 
 void Lexer::addToken(TokenType t) { addToken(t, source.substr(start, current - start)); }

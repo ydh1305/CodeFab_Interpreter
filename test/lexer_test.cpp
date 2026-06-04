@@ -26,3 +26,24 @@ TEST(LexerTest, StringLiteral) {
     EXPECT_EQ(t[0].type, TokenType::STRING);
     EXPECT_EQ(t[0].origin, "hello world");
 }
+
+// ── 불리언·null·키워드 ───────────────────────────────────────────
+TEST(LexerTest, TrueLiteral) {
+    auto t = lex("true");
+    ASSERT_EQ(t.size(), 1u); EXPECT_EQ(t[0].type, TokenType::TRUE_TOKEN);
+}
+TEST(LexerTest, FalseLiteral) {
+    auto t = lex("false");
+    ASSERT_EQ(t.size(), 1u); EXPECT_EQ(t[0].type, TokenType::FALSE_TOKEN);
+}
+TEST(LexerTest, NullLiteral) {
+    auto t = lex("null");
+    ASSERT_EQ(t.size(), 1u); EXPECT_EQ(t[0].type, TokenType::NULL_TOKEN);
+}
+TEST(LexerTest, Keywords) {
+    auto t = lex("var print if else for");
+    ASSERT_EQ(t.size(), 5u);
+    EXPECT_EQ(t[0].type, TokenType::VAR);   EXPECT_EQ(t[1].type, TokenType::PRINT);
+    EXPECT_EQ(t[2].type, TokenType::IF);    EXPECT_EQ(t[3].type, TokenType::ELSE);
+    EXPECT_EQ(t[4].type, TokenType::FOR);
+}
