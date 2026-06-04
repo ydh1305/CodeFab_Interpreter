@@ -54,3 +54,20 @@ TEST(ParserTest, GroupingExpression) {
     auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
     ASSERT_NE(dynamic_cast<GroupingExpr*>(e->expression.get()), nullptr);
 }
+
+// ── 논리·대입 표현식 ─────────────────────────────────────────────
+TEST(ParserTest, LogicalAndExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::TRUE_TOKEN,"true"},{TokenType::AND,"&&"},{TokenType::FALSE_TOKEN,"false"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    ASSERT_NE(dynamic_cast<LogicalExpr*>(e->expression.get()), nullptr);
+}
+TEST(ParserTest, LogicalOrExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::TRUE_TOKEN,"true"},{TokenType::OR,"||"},{TokenType::FALSE_TOKEN,"false"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    ASSERT_NE(dynamic_cast<LogicalExpr*>(e->expression.get()), nullptr);
+}
+TEST(ParserTest, AssignmentExpression) {
+    auto s = parseWith(mock::makeTokens({{TokenType::IDENTIFIER,"x"},{TokenType::EQUAL,"="},{TokenType::NUMBER,"5"},{TokenType::SEMICOLON,";"}}));
+    auto* e = dynamic_cast<ExpressionStmt*>(s[0].get());
+    ASSERT_NE(dynamic_cast<AssignExpr*>(e->expression.get()), nullptr);
+}
