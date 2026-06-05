@@ -30,6 +30,12 @@
     <Filter Include="Source Files\executor">
       <UniqueIdentifier>{B1000004-0000-0000-0000-000000000004}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Test Files">
+      <UniqueIdentifier>{D1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Test Files\GoogleTest">
+      <UniqueIdentifier>{D1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Script Files">
       <UniqueIdentifier>{C1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
@@ -94,6 +100,28 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- ── 테스트 파일 매핑 (Debug 전용) ────────────────────────────────────── -->
+  <ItemGroup>
+    <ClCompile Include="test\lexer_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\parser_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\checker_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\executor_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\error_test.cpp">
+      <Filter>Test Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-all.cc">
+      <Filter>Test Files\GoogleTest</Filter>
     </ClCompile>
   </ItemGroup>
 

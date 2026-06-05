@@ -2,66 +2,240 @@
 #include "codefab/fab_value.h"
 #include <iostream>
 #include <cmath>
+
 namespace codefab {
-Executor::Executor() : m_environment(std::make_shared<Environment>()) {}
-void Executor::execute(const std::vector<std::unique_ptr<Stmt>>& s) { for(const auto& st:s) executeStmt(*st); }
-FabValue Executor::evaluate(const Expr& e)  { return e.accept(*this); }
-void Executor::executeStmt(const Stmt& s)   { s.accept(*this); }
-void Executor::executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts, std::shared_ptr<Environment> env) {
-    auto prev = m_environment; m_environment = std::move(env);
-    try { for(const auto& s:stmts) executeStmt(*s); } catch(...) { m_environment=prev; throw; }
-    m_environment = prev;
-}
-bool Executor::isTruthy(const FabValue& v)                    { return codefab::isTruthy(v); }
-bool Executor::isEqualVal(const FabValue& a, const FabValue& b){ return a==b; }
-std::string Executor::stringify(const FabValue& v)            { return codefab::stringify(v); }
-void Executor::checkNumber(const FabValue& v, const std::string&) { if(!std::holds_alternative<double>(v)) throw RuntimeError("Operand must be a number."); }
-void Executor::checkNumbers(const FabValue& l, const FabValue& r, const std::string&) { if(!std::holds_alternative<double>(l)||!std::holds_alternative<double>(r)) throw RuntimeError("Operands must be numbers."); }
-// 구문 실행 — 다음 커밋에서 구현
-void Executor::visitExpression(const ExpressionStmt&) {}
-// stringify(): FabValue → 출력 문자열 (정수는 소수점 없이)
-void Executor::visitPrint(const PrintStmt& s) { std::cout << stringify(evaluate(*s.expression)) << "\n"; }
-// 미초기화 변수는 null로 초기화
-void Executor::visitVarDeclare(const VarDeclareStmt& s) { FabValue v=nullptr; if(s.initializer) v=evaluate(*s.initializer); m_environment->define(s.name.origin,std::move(v)); }
-void Executor::visitBlock(const BlockStmt& s) { executeBlock(s.statements, std::make_shared<Environment>(m_environment)); }
-void Executor::visitIf(const IfStmt& s) { if(isTruthy(evaluate(*s.condition))) executeStmt(*s.thenBranch); else if(s.elseBranch) executeStmt(*s.elseBranch); }
-void Executor::visitFor(const ForStmt& s) {
-    auto forEnv = std::make_shared<Environment>(m_environment);
-    auto prev = m_environment; m_environment = forEnv;
-    try {
-        if (s.initializer) executeStmt(*s.initializer);
-        while (!s.condition || isTruthy(evaluate(*s.condition))) {
-            executeStmt(*s.body);
-            if (s.increment) evaluate(*s.increment);
-        }
-    } catch (...) { m_environment = prev; throw; }
-    m_environment = prev;
-}
-// 표현식 평가
-FabValue Executor::visitLiteral(const LiteralExpr& e)   { return e.value; }
-FabValue Executor::visitVariable(const VariableExpr& e) { try { return m_environment->get(e.name.origin); } catch(const RuntimeError&) { throw RuntimeError("[line "+std::to_string(e.name.line)+"] Undefined variable '"+e.name.origin+"'."); } }
-FabValue Executor::visitAssign(const AssignExpr& e)     { FabValue v=evaluate(*e.value); try { m_environment->assign(e.name.origin,v); } catch(const RuntimeError&) { throw RuntimeError("[line "+std::to_string(e.name.line)+"] Undefined variable '"+e.name.origin+"'."); } return v; }
-FabValue Executor::visitGrouping(const GroupingExpr& e) { return evaluate(*e.expression); }
-FabValue Executor::visitUnary(const UnaryExpr& e)       { FabValue op=evaluate(*e.operand); if(e.op.type==TokenType::MINUS){checkNumber(op,e.op.origin);return -std::get<double>(op);}if(e.op.type==TokenType::BANG) return !isTruthy(op); throw RuntimeError("Unknown unary."); }
-FabValue Executor::visitBinary(const BinaryExpr& e) {
-    FabValue l=evaluate(*e.left), r=evaluate(*e.right);
-    switch(e.op.type) {
-        case TokenType::PLUS:
-            if(std::holds_alternative<double>(l)&&std::holds_alternative<double>(r)) return std::get<double>(l)+std::get<double>(r);
-            if(std::holds_alternative<std::string>(l)&&std::holds_alternative<std::string>(r)) return std::get<std::string>(l)+std::get<std::string>(r);
-            throw RuntimeError("Operands must be two numbers or two strings.");
-        case TokenType::MINUS: checkNumbers(l,r,e.op.origin); return std::get<double>(l)-std::get<double>(r);
-        case TokenType::STAR:  checkNumbers(l,r,e.op.origin); return std::get<double>(l)*std::get<double>(r);
-        case TokenType::SLASH: checkNumbers(l,r,e.op.origin); if(std::get<double>(r)==0.0) throw RuntimeError("Division by zero."); return std::get<double>(l)/std::get<double>(r);
-        case TokenType::PERCENT: checkNumbers(l,r,e.op.origin); if(std::get<double>(r)==0.0) throw RuntimeError("Division by zero (modulo)."); return std::fmod(std::get<double>(l),std::get<double>(r));
-        case TokenType::GREATER:       checkNumbers(l,r,e.op.origin); return std::get<double>(l)>std::get<double>(r);
-        case TokenType::GREATER_EQUAL: checkNumbers(l,r,e.op.origin); return std::get<double>(l)>=std::get<double>(r);
-        case TokenType::LESS:          checkNumbers(l,r,e.op.origin); return std::get<double>(l)<std::get<double>(r);
-        case TokenType::LESS_EQUAL:    checkNumbers(l,r,e.op.origin); return std::get<double>(l)<=std::get<double>(r);
-        case TokenType::EQUAL_EQUAL: return isEqualVal(l,r);
-        case TokenType::BANG_EQUAL:  return !isEqualVal(l,r);
-        default: throw RuntimeError("Unknown binary operator.");
+
+Executor::Executor()
+    : m_environment(std::make_shared<Environment>()) {}
+
+// ---- Public interface --------------------------------------------------------
+
+void Executor::execute(const std::vector<std::unique_ptr<Stmt>>& statements) {
+    for (const auto& stmt : statements) {
+        executeStmt(*stmt);
     }
 }
-FabValue Executor::visitLogical(const LogicalExpr& e) { FabValue l=evaluate(*e.left); if(e.op.type==TokenType::OR){if(isTruthy(l))return l;}else{if(!isTruthy(l))return l;} return evaluate(*e.right); }
+
+// ---- Internal helpers --------------------------------------------------------
+
+FabValue Executor::evaluate(const Expr& expr) {
+    return expr.accept(*this);
+}
+
+void Executor::executeStmt(const Stmt& stmt) {
+    stmt.accept(*this);
+}
+
+void Executor::executeBlock(const std::vector<std::unique_ptr<Stmt>>& stmts,
+                            std::shared_ptr<Environment> env) {
+    auto previous = m_environment;
+    m_environment = std::move(env);
+    try {
+        for (const auto& stmt : stmts) {
+            executeStmt(*stmt);
+        }
+    } catch (...) {
+        m_environment = previous;
+        throw;
+    }
+    m_environment = previous;
+}
+
+bool Executor::isTruthy(const FabValue& val) {
+    return codefab::isTruthy(val);
+}
+
+bool Executor::isEqualVal(const FabValue& a, const FabValue& b) {
+    return a == b;
+}
+
+void Executor::checkNumber(const FabValue& val, const std::string& /*op*/) {
+    if (!std::holds_alternative<double>(val)) {
+        throw RuntimeError("Operand must be a number.");
+    }
+}
+
+void Executor::checkNumbers(const FabValue& left, const FabValue& right,
+                            const std::string& /*op*/) {
+    if (!std::holds_alternative<double>(left) || !std::holds_alternative<double>(right)) {
+        throw RuntimeError("Operands must be numbers.");
+    }
+}
+
+std::string Executor::stringify(const FabValue& val) {
+    return codefab::stringify(val);
+}
+
+// ---- StmtVisitor -------------------------------------------------------------
+
+void Executor::visitExpression(const ExpressionStmt& stmt) {
+    evaluate(*stmt.expression);
+}
+
+void Executor::visitPrint(const PrintStmt& stmt) {
+    FabValue val = evaluate(*stmt.expression);
+    std::cout << stringify(val) << "\n";
+}
+
+void Executor::visitVarDeclare(const VarDeclareStmt& stmt) {
+    FabValue val = nullptr;
+    if (stmt.initializer) {
+        val = evaluate(*stmt.initializer);
+    }
+    m_environment->define(stmt.name.origin, std::move(val));
+}
+
+void Executor::visitBlock(const BlockStmt& stmt) {
+    executeBlock(stmt.statements, std::make_shared<Environment>(m_environment));
+}
+
+void Executor::visitIf(const IfStmt& stmt) {
+    if (isTruthy(evaluate(*stmt.condition))) {
+        executeStmt(*stmt.thenBranch);
+    } else if (stmt.elseBranch) {
+        executeStmt(*stmt.elseBranch);
+    }
+}
+
+void Executor::visitFor(const ForStmt& stmt) {
+    auto forEnv = std::make_shared<Environment>(m_environment);
+    auto previous = m_environment;
+    m_environment = forEnv;
+    try {
+        if (stmt.initializer) executeStmt(*stmt.initializer);
+
+        while (!stmt.condition || isTruthy(evaluate(*stmt.condition))) {
+            executeStmt(*stmt.body);
+            if (stmt.increment) evaluate(*stmt.increment);
+        }
+    } catch (...) {
+        m_environment = previous;
+        throw;
+    }
+    m_environment = previous;
+}
+
+// ---- ExprVisitor -------------------------------------------------------------
+
+FabValue Executor::visitLiteral(const LiteralExpr& expr) {
+    return expr.value;
+}
+
+FabValue Executor::visitVariable(const VariableExpr& expr) {
+    try {
+        return m_environment->get(expr.name.origin);
+    } catch (const RuntimeError&) {
+        // 줄 번호 포함한 에러 메시지로 재throw
+        throw RuntimeError(
+            "[line " + std::to_string(expr.name.line) +
+            "] Undefined variable '" + expr.name.origin + "'.");
+    }
+}
+
+FabValue Executor::visitAssign(const AssignExpr& expr) {
+    FabValue val = evaluate(*expr.value);
+    try {
+        m_environment->assign(expr.name.origin, val);
+    } catch (const RuntimeError&) {
+        throw RuntimeError(
+            "[line " + std::to_string(expr.name.line) +
+            "] Undefined variable '" + expr.name.origin + "'.");
+    }
+    return val;
+}
+
+FabValue Executor::visitGrouping(const GroupingExpr& expr) {
+    return evaluate(*expr.expression);
+}
+
+FabValue Executor::visitUnary(const UnaryExpr& expr) {
+    FabValue operand = evaluate(*expr.operand);
+    switch (expr.op.type) {
+        case TokenType::MINUS:
+            checkNumber(operand, expr.op.origin);  // "Operand must be a number."
+            return -std::get<double>(operand);
+        case TokenType::BANG:
+            return !isTruthy(operand);
+        default:
+            throw RuntimeError("Unknown unary operator: " + expr.op.origin);
+    }
+}
+
+FabValue Executor::visitBinary(const BinaryExpr& expr) {
+    FabValue left  = evaluate(*expr.left);
+    FabValue right = evaluate(*expr.right);
+
+    switch (expr.op.type) {
+        case TokenType::PLUS:
+            // 숫자 + 숫자
+            if (std::holds_alternative<double>(left) &&
+                std::holds_alternative<double>(right)) {
+                return std::get<double>(left) + std::get<double>(right);
+            }
+            // 문자열 + 문자열
+            if (std::holds_alternative<std::string>(left) &&
+                std::holds_alternative<std::string>(right)) {
+                return std::get<std::string>(left) + std::get<std::string>(right);
+            }
+            // 혼용 불가
+            throw RuntimeError("Operands must be two numbers or two strings.");
+
+        case TokenType::MINUS:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) - std::get<double>(right);
+
+        case TokenType::STAR:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) * std::get<double>(right);
+
+        case TokenType::SLASH:
+            checkNumbers(left, right, expr.op.origin);
+            if (std::get<double>(right) == 0.0)
+                throw RuntimeError("Division by zero.");
+            return std::get<double>(left) / std::get<double>(right);
+
+        case TokenType::PERCENT:
+            checkNumbers(left, right, expr.op.origin);
+            if (std::get<double>(right) == 0.0)
+                throw RuntimeError("Division by zero (modulo).");
+            return std::fmod(std::get<double>(left), std::get<double>(right));
+
+        case TokenType::GREATER:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) > std::get<double>(right);
+
+        case TokenType::GREATER_EQUAL:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) >= std::get<double>(right);
+
+        case TokenType::LESS:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) < std::get<double>(right);
+
+        case TokenType::LESS_EQUAL:
+            checkNumbers(left, right, expr.op.origin);
+            return std::get<double>(left) <= std::get<double>(right);
+
+        case TokenType::EQUAL_EQUAL:
+            return isEqualVal(left, right);
+
+        case TokenType::BANG_EQUAL:
+            return !isEqualVal(left, right);
+
+        default:
+            throw RuntimeError("Unknown binary operator: " + expr.op.origin);
+    }
+}
+
+FabValue Executor::visitLogical(const LogicalExpr& expr) {
+    FabValue left = evaluate(*expr.left);
+    // 단락 평가 (Short-circuit evaluation)
+    if (expr.op.type == TokenType::OR) {
+        if (isTruthy(left)) return left;
+    } else { // AND
+        if (!isTruthy(left)) return left;
+    }
+    return evaluate(*expr.right);
+}
+
 } // namespace codefab

@@ -1,3 +1,25 @@
+// ============================================================
+// Debug  빌드 : GoogleTest 전체 실행
+// Release 빌드 : Fab 언어 REPL / CLI 실행
+// ============================================================
+
+#ifdef _DEBUG
+// ── Debug: GoogleTest ────────────────────────────────────────────
+#include <gtest/gtest.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+int main(int argc, char* argv[]) {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+#else
+// ── Release: REPL / CLI ──────────────────────────────────────────
 #include "codefab/code_fab.h"
 #include "codefab/assembler/lexer.h"
 #include "codefab/assembler/parser.h"
@@ -32,14 +54,11 @@ static int braceDepthDelta(const std::string& line) {
 }
 
 // 문장 트리에서 "else 없는 if"가 꼬리에 있는지 재귀 검사
-// (dangling else: 다음 줄에 else가 올 수 있는지 판단)
 static bool stmtHasPendingElse(const codefab::Stmt* stmt) {
     using namespace codefab;
     if (!stmt) return false;
     if (auto* s = dynamic_cast<const IfStmt*>(stmt)) {
-        // else가 없으면 이 if가 else를 받을 수 있다
         if (!s->elseBranch) return true;
-        // else가 있으면 else 본문의 꼬리 검사
         return stmtHasPendingElse(s->elseBranch.get());
     }
     if (auto* s = dynamic_cast<const BlockStmt*>(stmt)) {
@@ -56,7 +75,7 @@ static bool hasPendingElse(const std::vector<std::unique_ptr<codefab::Stmt>>& st
     return !stmts.empty() && stmtHasPendingElse(stmts.back().get());
 }
 
-// 줄이 'else' 키워드로 시작하는지 확인 (앞 공백 무시, 식별자 경계 확인)
+// 줄이 'else' 키워드로 시작하는지 확인
 static bool lineStartsWithElse(const std::string& line) {
     size_t i = line.find_first_not_of(" \t");
     if (i == std::string::npos) return false;
@@ -70,14 +89,12 @@ static bool lineStartsWithElse(const std::string& line) {
 // 파싱 결과 상태
 // ────────────────────────────────────────────────────────────────────────────
 enum class ParseState {
-    INCOMPLETE,      // EOF에서 파싱 중단 → 더 입력 필요
-    PENDING_ELSE,    // 파싱 성공, 마지막 stmt가 else 없는 if → else 대기
-    DONE,            // 파싱+검증 성공, 실행 가능
-    ERROR_CONSUMED   // 에러 출력 완료 → 누적 버퍼 초기화
+    INCOMPLETE,
+    PENDING_ELSE,
+    DONE,
+    ERROR_CONSUMED
 };
 
-// 소스를 파싱하고 상태 반환. DONE/PENDING_ELSE이면 stmts에 AST 저장.
-// allowPendingElse: 연속 입력 중일 때만 true (단독 한 줄 입력은 false)
 static ParseState tryParse(const std::string& src,
                            std::vector<std::unique_ptr<codefab::Stmt>>& stmts,
                            bool allowPendingElse) {
@@ -115,15 +132,6 @@ static void executeStmts(const std::vector<std::unique_ptr<codefab::Stmt>>& stmt
 // ────────────────────────────────────────────────────────────────────────────
 // REPL 메인 루프
 // ────────────────────────────────────────────────────────────────────────────
-//
-// 세 가지 모드:
-//   NORMAL       – "fab> " 프롬프트, 한 줄 입력 즉시 파싱·실행
-//   INCOMPLETE   – "... " 프롬프트, EOF 파싱 실패 → 계속 누적
-//   PENDING_ELSE – "... " 프롬프트, else 없는 if 파싱 성공 → else 줄 대기
-//
-// PENDING_ELSE 종료 조건:
-//   - 'else'로 시작하는 줄 → 누적 후 재파싱
-//   - 빈 줄 또는 else가 아닌 다른 줄 → 현재 누적 실행 후 다음 줄 처리
 static void runPromptShell() {
     codefab::Executor executor;
     std::cout << "========================================\n";
@@ -133,10 +141,9 @@ static void runPromptShell() {
 
     std::string accumulated;
     int depth = 0;
-    ParseState parseState = ParseState::DONE;   // DONE = 정상(초기) 상태
+    ParseState parseState = ParseState::DONE;
     std::vector<std::unique_ptr<codefab::Stmt>> parsedStmts;
 
-    // 현재 누적 소스를 실행하고 상태를 초기화
     auto flushAndReset = [&]() {
         executeStmts(parsedStmts, executor);
         parsedStmts.clear();
@@ -145,7 +152,6 @@ static void runPromptShell() {
         parseState = ParseState::DONE;
     };
 
-    // 누적 버퍼·상태 리셋 (에러 후 또는 수동)
     auto hardReset = [&]() {
         parsedStmts.clear();
         accumulated.clear();
@@ -160,42 +166,26 @@ static void runPromptShell() {
         std::cout << (inContinuation ? "... " : "fab> ");
 
         std::string line;
-        if (!std::getline(std::cin, line)) break; // EOF
+        if (!std::getline(std::cin, line)) break;
 
-        // ── PENDING_ELSE 처리: else 줄인지 아닌지 판단 ─────────────────────
         if (parseState == ParseState::PENDING_ELSE) {
-            if (line.empty()) {
-                // 빈 줄 → 사용자가 else 없음을 명시 → 즉시 실행
-                flushAndReset();
-                continue;
-            }
+            if (line.empty()) { flushAndReset(); continue; }
             if (!lineStartsWithElse(line)) {
-                // else가 아닌 다음 문장 → 현재 누적 실행 후 이 줄을 새 입력으로
                 flushAndReset();
                 if (line == "exit" || line == "quit") break;
-                // 이 줄을 새 입력처럼 처리 (fall-through)
             }
-            // else 줄이면 바로 누적으로 fall-through
         } else {
-            // ── 일반/미완성 모드 ────────────────────────────────────────────
             if (!inContinuation) {
                 if (line == "exit" || line == "quit") break;
                 if (line.empty()) continue;
             }
         }
 
-        // 중괄호 깊이 갱신 & 누적
         depth += braceDepthDelta(line);
         accumulated += line + "\n";
 
-        // 미닫힌 블록이 남아 있으면 계속 읽기
-        if (depth > 0) {
-            parseState = ParseState::INCOMPLETE;
-            continue;
-        }
+        if (depth > 0) { parseState = ParseState::INCOMPLETE; continue; }
 
-        // depth == 0: 파싱 시도
-        // 이미 연속 입력 모드였거나 블록 깊이가 있었으면 pending else 검사 허용
         bool wasContinuation = inContinuation;
         parseState = tryParse(accumulated, parsedStmts, wasContinuation);
 
@@ -205,10 +195,8 @@ static void runPromptShell() {
                 hardReset();
                 break;
             case ParseState::PENDING_ELSE:
-                // parsedStmts에 AST 보관, 다음 줄 대기
                 break;
             case ParseState::INCOMPLETE:
-                // 계속 누적
                 break;
             case ParseState::ERROR_CONSUMED:
                 hardReset();
@@ -234,3 +222,5 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
+
+#endif // _DEBUG
